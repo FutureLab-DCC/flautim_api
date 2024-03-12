@@ -3,7 +3,7 @@ import time
 import argparse
 from enum import Enum
 import flwr as fl
-from flwr.common import NDArrays, Scalar
+#from flwr.common import NDArrays, Scalar
 
 class Backend(object):
     def __init__(self, **kwargs):
@@ -76,14 +76,14 @@ def run(client_fn, eval_fn):
     strategy = fl.server.strategy.FedAvg(
         fraction_fit=0.1,  
         fraction_evaluate=0.1,  
-        min_available_clients=3,  
+        min_available_clients=context.clients,  
         evaluate_fn=eval_fn(),
     )  
    
     history = fl.simulation.start_simulation(
         client_fn=client_fn, 
-        num_clients=3, 
-        config=fl.server.ServerConfig(num_rounds=10),  
+        num_clients=context.clients, 
+        config=fl.server.ServerConfig(num_rounds=context.rounds),  
         strategy=strategy,  
     )
 
@@ -93,14 +93,16 @@ def run(client_fn, eval_fn):
 parser = argparse.ArgumentParser()
 parser.add_argument("--user", type=str, required=True)
 parser.add_argument("--path", type=str, required=True)
-parser.add_argument("--dbserver", type=str, required=True)
-parser.add_argument("--dbport", type=str, required=True)
+parser.add_argument("--dbserver", type=str, required=False, default="127.0.0.1")
+parser.add_argument("--dbport", type=str, required=False, default="270017")
 parser.add_argument("--dbuser", type=str, required=True)
 parser.add_argument("--dbpw", type=str, required=True)
+parser.add_argument("--clients", type=int, required=False, default=3)
+parser.add_argument("--rounds", type=int, required=False, default=10)
 context = parser.parse_args()
 
 backend = Backend(server = context.dbserver, port = context.dbport, user = context.dbuser, password=context.dbpw)
 logger = Logger(backend)
 measures = Measures(backend)
 
-logger.log("Inicializando ambiente!")
+# logger.log("Inicializando ambiente!")

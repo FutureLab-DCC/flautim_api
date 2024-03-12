@@ -3,7 +3,7 @@ import numpy as np
 
 import os
 import flwr as fl
-from flwr.common import NDArrays, Scalar
+#from flwr.common import NDArrays, Scalar
 from programming_api.common import context, logger, backend, measures
 from programming_api import Model, Dataset
 
@@ -25,11 +25,11 @@ class Experiment(fl.client.NumPyClient):
 
         self.model.set_parameters(parameters)
 
-        self.training_loop(self.dataset.train().dataloader())
+        self.training_loop(self.dataset.dataloader())
 
         logger.log("Terminando treinamento - Model {} - Dataset {}".format(self.model.uid, self.dataset.name))
 
-        self.model.checkpoint()
+        self.model.save()
 
         return 
 
@@ -39,7 +39,7 @@ class Experiment(fl.client.NumPyClient):
         
         self.model.set_parameters(parameters)
         
-        self.validation_loop(self.dataset.validation().dataloader())
+        self.validation_loop(self.dataset.dataloader(validation = True))
 
         logger.log("Terminando validação - Model {} - Dataset {}".format(self.model.uid, self.dataset.name))
 
