@@ -4,8 +4,8 @@ import numpy as np
 import os
 import flwr as fl
 from flwr.common import NDArrays, Scalar
-from common import context, logger, backend, measures
-import Model, Dataset
+from programming_api.common import context, logger, backend, measures
+from programming_api import Model, Dataset
 
 class Experiment(fl.client.NumPyClient):
     def __init__(self, model : Model, dataset : Dataset, **kwargs) -> None:
@@ -17,15 +17,15 @@ class Experiment(fl.client.NumPyClient):
     def set_parameters(self, parameters):
         self.model.set_parameters(parameters)
 
-    def get_parameters(self, config):
+    def get_parameters(self):
         return self.model.get_parameters()
         
-    def train(self, parameters, config):
+    def train(self, parameters):
         logger.log("Iniciando treinamento - Model {} - Dataset {}".format(self.model.uid, self.dataset.name))
 
         self.model.set_parameters(parameters)
 
-        self.training_loop(self.dataset.train())
+        self.training_loop(self.dataset.train().dataloader())
 
         logger.log("Terminando treinamento - Model {} - Dataset {}".format(self.model.uid, self.dataset.name))
 
@@ -33,13 +33,13 @@ class Experiment(fl.client.NumPyClient):
 
         return 
 
-    def evaluate(self, parameters, config):
+    def evaluate(self, parameters):
 
         logger.log("Iniciando validação - Model {} - Dataset {}".format(self.model.uid, self.dataset.name))
         
         self.model.set_parameters(parameters)
         
-        self.validation_loop(self.dataset.validation())
+        self.validation_loop(self.dataset.validation().dataloader())
 
         logger.log("Terminando validação - Model {} - Dataset {}".format(self.model.uid, self.dataset.name))
 

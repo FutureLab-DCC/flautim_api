@@ -1,4 +1,4 @@
-from common import context, logger, backend
+from programming_api.common import context, logger, backend
 import uuid
 from datetime import datetime
 import os
@@ -21,11 +21,11 @@ class Model(nn.Module):
         self.checkpoint_file = "{}/models/{}{}-{}.h5"
 
     def set_parameters(self, parameters):
-        params_dict = zip(self.model.state_dict().keys(), parameters)
+        params_dict = zip(self.state_dict().keys(), parameters)
         state_dict = OrderedDict({k: torch.Tensor(v) for k, v in params_dict})
         self.load_state_dict(state_dict, strict=True)
 
-    def get_parameters(self, config):
+    def get_parameters(self):
         return [val.cpu().numpy() for _, val in self.state_dict().items()]
         
     def save(self):

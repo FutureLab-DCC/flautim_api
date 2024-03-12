@@ -70,6 +70,9 @@ class Measures(object):
 
 
 def run(client_fn, eval_fn):
+    
+    logger.log("Iniciando experimento")
+
     strategy = fl.server.strategy.FedAvg(
         fraction_fit=0.1,  
         fraction_evaluate=0.1,  
@@ -83,6 +86,8 @@ def run(client_fn, eval_fn):
         config=fl.server.ServerConfig(num_rounds=10),  
         strategy=strategy,  
     )
+
+    logger.log("Finalizando experimento")
 
 
 parser = argparse.ArgumentParser()

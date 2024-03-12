@@ -3,13 +3,13 @@ from torchvision.transforms import ToTensor, Normalize, Compose
 import copy
 
 class Dataset(Dataset):
-    def __init__(self, name, train_split, **kwargs) -> None:
+    def __init__(self, name, train_split = .8, **kwargs) -> None:
         super().__init__()
         self.name = name
         self.train_split = train_split
         self.batch_size = kwargs.get("batch_size", 128)
         self.shuffle = kwargs.get("shuffle", True)
-        self.num_workers = kwargs.get("num_workers", 2)
+        self.num_workers = kwargs.get("num_workers", 1)
 		
     def train(self) -> Dataset:
         raise NotImplementedError("The validation method should be implemented!")
@@ -28,6 +28,6 @@ class Dataset(Dataset):
         raise NotImplementedError("The validation method should be implemented!")
     
     def __iter__(self):
-        for ix in range(0, self.num_samples):
+        for ix in range(0, len(self)):
             yield self[ix]
         
