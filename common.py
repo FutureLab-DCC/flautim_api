@@ -59,11 +59,12 @@ class Measures(object):
         self.backend = backend
         self.measures = self.backend.db['measures']
         
-    def log(self, experiment, metric, values, validation):
+    def log(self, experiment, metric, values, validation = False, **append):
         ts = time.time()
         data = { "user": context.user, "timestamp": ts, "metric" : str(metric),
                 "model" : experiment.model.uid, "dataset": experiment.dataset.name, 
                 "values": values, "validation": validation}
+        data.update(append)
         
         self.measures.insert_one(data)
 
