@@ -34,7 +34,7 @@ class Logger(object):
         self.logs.insert_one(data)
 
 
-class Metric(Enum):
+class metrics(Enum):
      MSE = 1
      RMSE = 2
      NRMSE = 3
