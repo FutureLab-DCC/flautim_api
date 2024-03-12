@@ -4,63 +4,51 @@ import numpy as np
 import os
 import flwr as fl
 from flwr.common import NDArrays, Scalar
-from common import context, logger, backend
+from common import context, logger, backend, measures
+import Model, Dataset
 
 class Experiment(fl.client.NumPyClient):
     def __init__(self, model : Model, dataset : Dataset, **kwargs) -> None:
         super().__init__()
+        self.id = kwargs.get("id", None)
         self.model = model
         self.dataset = dataset
+
+    def set_parameters(self, parameters):
+        self.model.set_parameters(parameters)
+
+    def get_parameters(self, config):
+        return self.model.get_parameters()
         
     def train(self, parameters, config):
-        self.set_parameters(parameters)
+        logger.log("Iniciando treinamento - Model {} - Dataset {}".format(self.model.uid, self.dataset.name))
 
-        optim = torch.optim.SGD(self.model.parameters(), lr=0.01, momentum=0.9)
-        
-        train(self.model, self.trainloader, optim, epochs=self.epoch)
+        self.model.set_parameters(parameters)
 
-        return self.get_parameters({}), len(self.trainloader), {}
+        self.training_loop(self.dataset.train())
+
+        logger.log("Terminando treinamento - Model {} - Dataset {}".format(self.model.uid, self.dataset.name))
+
+        self.model.checkpoint()
+
+        return 
 
     def evaluate(self, parameters, config):
-        """Evaluate the model sent by the server on this client's
-        local validation set. Then return performance metrics."""
 
-        self.set_parameters(parameters)
-        loss, accuracy = test(
-            self.model, self.valloader
-        )  
-        torch.save(self.model.state_dict(), self.savemodel)
-        return float(loss), len(self.valloader), {"accuracy": accuracy}
+        logger.log("Iniciando validação - Model {} - Dataset {}".format(self.model.uid, self.dataset.name))
         
-
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data", type=str, required=True)
-    parser.add_argument("--epoch", type=int, required=True)
-    parser.add_argument("--batch", type=int, required=True)
-    parser.add_argument("--savemodel", type=str, required=True)
-    args = parser.parse_args()
-
-    dir_path = os.path.dirname(args.savemodel)
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
+        self.model.set_parameters(parameters)
         
-    
-    client_fn_callback = generate_client_fn(args)
-    
-    # now we can define the strategy
-    strategy = fl.server.strategy.FedAvg(
-        fraction_fit=0.1,  
-        fraction_evaluate=0.1,  
-        min_available_clients=3,  
-        evaluate_fn=get_evalulate_fn(),
-    )  
-   
-    history = fl.simulation.start_simulation(
-    client_fn=client_fn_callback, 
-    num_clients=3, 
-    config=fl.server.ServerConfig(num_rounds=10),  
-    strategy=strategy,  
-    )        
+        self.validation_loop(self.dataset.validation())
+
+        logger.log("Terminando validação - Model {} - Dataset {}".format(self.model.uid, self.dataset.name))
+
+        self.model.save()
+        return
+
+    def training_loop(self, data_loader):
+        raise NotImplementedError("The training_loop method should be implemented!")
+
+    def validation_loop(self, data_loader):
+        raise NotImplementedError("The validation_loop method should be implemented!")
+        
