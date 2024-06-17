@@ -5,6 +5,8 @@ from enum import Enum
 import flwr as fl
 #from flwr.common import NDArrays, Scalar
 
+import logging
+
 class Backend(object):
     def __init__(self, **kwargs):
         super().__init__()
@@ -88,7 +90,22 @@ def fit_config(server_round: int):
     }
     return config
 
-def run(client_fn, eval_fn):
+def run(client_fn, eval_fn, name_log = 'flower.log'):
+
+    logging.basicConfig(filename=name_log,
+                    filemode='a',  # 'a' para append, 'w' para sobrescrever
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+
+
+    flower_logger = logging.getLogger('flwr')
+    flower_logger.setLevel(logging.INFO)  # Ajustar conforme necessário
+
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    flower_logger.addHandler(console_handler)
 
     parser, context, backend, logger, measures = get_argparser()
     
@@ -99,7 +116,8 @@ def run(client_fn, eval_fn):
         fraction_evaluate=0.1,  
         min_available_clients=context.clients,  
         evaluate_fn=eval_fn,
-        on_fit_config_fn=fit_config
+        on_fit_config_fn=fit_config,
+        evaluate_metrics_aggregation_fn=client_fn(0).weighted_average
     )  
    
     history = fl.simulation.start_simulation(
