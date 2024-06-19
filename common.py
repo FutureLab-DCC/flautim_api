@@ -5,6 +5,11 @@ from enum import Enum
 import flwr as fl
 #from flwr.common import NDArrays, Scalar
 
+from typing import List, Tuple, Dict
+import numpy as np
+
+from flwr.server.strategy.aggregate import weighted_loss_avg
+
 import logging
 
 class Backend(object):
@@ -63,10 +68,9 @@ class metrics(Enum):
 
 
 class Measures(object):
-    def __init__(self, backend, context):
+    def __init__(self, context):
         super().__init__()
         
-        self.backend = backend
         self.context = context
         
     def log(self, experiment, metric, values, validation = False, **append):
@@ -77,7 +81,9 @@ class Measures(object):
                 "epoch" : experiment.epoch_fl}
         data.update(append)
         
-        self.backend.write_db(data, collection = 'measures')
+        backend = Backend(server = self.context.dbserver, port = self.context.dbport, user = self.context.dbuser, password=self.context.dbpw)
+        
+        backend.write_db(data, collection = 'measures')
 
 def fit_config(server_round: int):
     """Return training configuration dict for each round.
@@ -90,7 +96,43 @@ def fit_config(server_round: int):
     }
     return config
 
+
+class CustomFedAvg(fl.server.strategy.FedAvg):
+
+    def aggregate_evaluate(
+        self,
+        server_round: int,
+        results,
+        failures,
+    ) :
+        """Aggregate evaluation losses using weighted average."""
+        if not results:
+            return None, {}
+        # Do not aggregate if there are failures and failures are not accepted
+        if not self.accept_failures and failures:
+            return None, {}
+
+        # Aggregate loss
+        loss_aggregated = weighted_loss_avg(
+            [
+                (evaluate_res.num_examples, evaluate_res.loss)
+                for _, evaluate_res in results
+            ]
+        )
+
+        # Aggregate custom metrics if aggregation fn was provided
+        metrics_aggregated = {}
+        if self.evaluate_metrics_aggregation_fn:
+            eval_metrics = [(res.num_examples, res.metrics) for _, res in results]
+            metrics_aggregated = self.evaluate_metrics_aggregation_fn(eval_metrics, server_round)
+        elif server_round == 1:  # Only log this warning once
+            log(WARNING, "No evaluate_metrics_aggregation_fn provided")
+            
+        return loss_aggregated, metrics_aggregated
+
+    
 def run(client_fn, eval_fn, name_log = 'flower.log'):
+
 
     logging.basicConfig(filename=name_log,
                     filemode='a',  # 'a' para append, 'w' para sobrescrever
@@ -111,7 +153,7 @@ def run(client_fn, eval_fn, name_log = 'flower.log'):
     
     logger.log("Iniciando experimento")
 
-    strategy = fl.server.strategy.FedAvg(
+    strategy = CustomFedAvg(
         fraction_fit=0.1,  
         fraction_evaluate=0.1,  
         min_available_clients=context.clients,  
@@ -144,8 +186,9 @@ def get_argparser():
     context = parser.parse_args()
     
     backend = Backend(server = context.dbserver, port = context.dbport, user = context.dbuser, password=context.dbpw)
+    
     logger = Logger(backend, context)
-    measures = Measures(backend, context)
+    measures = Measures(context)
     
     return parser, context, backend, logger, measures
 
