@@ -15,6 +15,8 @@ class Model(nn.Module):
         self.uid = kwargs.get('id',str(uuid.uuid1()))
         self.name = kwargs.get('name', context.user)
         self.suffix = kwargs.get('suffix', '')
+        if self.suffix==0:
+            self.suffix = 'FL-Global'
         self.version = kwargs.get('version', '1')
         
         self.path = context.path
