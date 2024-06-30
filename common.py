@@ -19,12 +19,12 @@ class Backend(object):
         self. _port = kwargs.get('port', '27017')
         self._user = kwargs.get('user', None)
         self._pw = kwargs.get('password', None)
-        self._db = kwargs.get('authentication', 'admin')
+        self._db = kwargs.get('db', 'flautim')
         
         
     def write_db(self, msg, collection):
         self.connection = pymongo.MongoClient("mongodb://{}:{}@{}:{}".format(self._user, self._pw, self._server, self._port))
-        self.db = self.connection["admin"]
+        self.db = self.connection[self._db]
             
         self.db[collection].insert_one(msg)
             
