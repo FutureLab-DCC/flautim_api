@@ -19,16 +19,24 @@ class Backend(object):
         self. _port = kwargs.get('port', '27017')
         self._user = kwargs.get('user', None)
         self._pw = kwargs.get('password', None)
-        self._db = kwargs.get('db', 'flautim')
+        self._db = kwargs.get('authentication', 'admin')
         
         
     def write_db(self, msg, collection):
         self.connection = pymongo.MongoClient("mongodb://{}:{}@{}:{}".format(self._user, self._pw, self._server, self._port))
-        self.db = self.connection[self._db]
+        self.db = self.connection["admin"]
             
         self.db[collection].insert_one(msg)
             
         self.connection.close()
+        
+    def write_experiment_results(self, file_path):
+        with open(file_path, 'r') as file:
+            content = file.read()
+        
+        
+        msg = {"content": content}
+        self.write_db(msg, "experiment_results")
             
             
         
@@ -170,6 +178,8 @@ def run(client_fn, eval_fn, name_log = 'flower.log'):
     )
 
     logger.log("Finalizando experimento")
+    
+    backend.write_experiment_results('./flower.log')
 
 def get_argparser():
     parser = argparse.ArgumentParser()
