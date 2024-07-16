@@ -30,12 +30,13 @@ class Backend(object):
             
         self.connection.close()
         
-    def write_experiment_results(self, file_path):
+    def write_experiment_results(self, file_path, experiment):
         with open(file_path, 'r') as file:
             content = file.read()
         
         
-        msg = {"content": content}
+        msg = {"Experiment": experiment,
+               "content": content}
         self.write_db(msg, "experiment_results")
             
             
@@ -143,7 +144,7 @@ def run(client_fn, eval_fn, name_log = 'flower.log'):
 
 
     logging.basicConfig(filename=name_log,
-                    filemode='a',  # 'a' para append, 'w' para sobrescrever
+                    filemode='w',  # 'a' para append, 'w' para sobrescrever
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
@@ -179,7 +180,7 @@ def run(client_fn, eval_fn, name_log = 'flower.log'):
 
     logger.log("Finalizando experimento")
     
-    backend.write_experiment_results('./flower.log')
+    backend.write_experiment_results('./flower.log', context.IDexperiment)
 
 def get_argparser():
     parser = argparse.ArgumentParser()
