@@ -3,6 +3,7 @@ import time
 import argparse
 from enum import Enum
 import flwr as fl
+import os
 #from flwr.common import NDArrays, Scalar
 
 from typing import List, Tuple, Dict
@@ -141,6 +142,10 @@ class CustomFedAvg(fl.server.strategy.FedAvg):
 
     
 def run(client_fn, eval_fn, name_log = 'flower.log'):
+
+    cwd = os.getcwd()
+
+    logger.log(cwd)
 
 
     logging.basicConfig(filename=name_log,
