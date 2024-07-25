@@ -4,7 +4,7 @@ import numpy as np
 import os
 import flwr as fl
 #from flwr.common import NDArrays, Scalar
-from flautim_api import Model, Dataset
+from flautim import Model, Dataset
 
 class Experiment(fl.client.NumPyClient):
     def __init__(self, model : Model, dataset : Dataset, measures, logger,context, **kwargs) -> None:
