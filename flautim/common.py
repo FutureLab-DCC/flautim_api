@@ -143,11 +143,6 @@ class CustomFedAvg(fl.server.strategy.FedAvg):
     
 def run(client_fn, eval_fn, name_log = 'flower.log'):
 
-    cwd = os.getcwd()
-
-    logger.log(cwd)
-
-
     logging.basicConfig(filename=name_log,
                     filemode='w',  # 'a' para append, 'w' para sobrescrever
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
