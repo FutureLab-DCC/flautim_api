@@ -25,7 +25,7 @@ class Backend(object):
         
     def write_db(self, msg, collection):
         self.connection = pymongo.MongoClient("mongodb://{}:{}@{}:{}".format(self._user, self._pw, self._server, self._port))
-        self.db = self.connection["admin"]
+        self.db = self.connection["flautim"]
             
         self.db[collection].insert_one(msg)
             
