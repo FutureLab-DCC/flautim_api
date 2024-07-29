@@ -4,14 +4,13 @@ import argparse
 from enum import Enum
 import flwr as fl
 import os
-#from flwr.common import NDArrays, Scalar
-
+import threading
+import schedule
+import logging
 from typing import List, Tuple, Dict
 import numpy as np
 
 from flwr.server.strategy.aggregate import weighted_loss_avg
-
-import logging
 
 class Backend(object):
     def __init__(self, **kwargs):
@@ -22,6 +21,10 @@ class Backend(object):
         self._pw = kwargs.get('password', None)
         self._db = kwargs.get('authentication', 'admin')
         
+    def get_db(self):
+        self.connection = pymongo.MongoClient("mongodb://{}:{}@{}:{}".format(self._user, self._pw, self._server, self._port))
+        self.db = self.connection["flautim"]
+        return self.db
         
     def write_db(self, msg, collection):
         self.connection = pymongo.MongoClient("mongodb://{}:{}@{}:{}".format(self._user, self._pw, self._server, self._port))
@@ -32,16 +35,31 @@ class Backend(object):
         self.connection.close()
         
     def write_experiment_results(self, file_path, experiment):
+        db = self.get_db()["experiment_results"]
+
+        filter = {"Experiment" : experiment}
+
+        cursor = db.find(filter)
+
         with open(file_path, 'r') as file:
             content = file.read()
+
+        if cursor.hasNext():
+            newvalues = { "$set": { "content": content } }
+            db.update_one(filter, newvalues)
+        else:
+            registro = {"Experiment": experiment,
+            "content": content}
+            db.insert_one(registro)
+
+    
+    def write_experiment_results_callback(self, file_path, experiment):
+        def fn_callback():
+            self.write_experiment_results(file_path=file_path, experiment=experiment)
+                
+        return fn_callback()
         
-        
-        msg = {"Experiment": experiment,
-               "content": content}
-        self.write_db(msg, "experiment_results")
-            
-            
-        
+
 
 class Logger(object):
     def __init__(self, backend, context):
@@ -162,23 +180,38 @@ def run(client_fn, eval_fn, name_log = 'flower.log'):
     
     logger.log("Iniciando experimento")
 
-    strategy = CustomFedAvg(
-        fraction_fit=0.1,  
-        fraction_evaluate=0.1,  
-        min_available_clients=context.clients,  
-        evaluate_fn=eval_fn,
-        on_fit_config_fn=fit_config,
-        evaluate_metrics_aggregation_fn=client_fn(0).weighted_average
-    )  
-   
-    history = fl.simulation.start_simulation(
-        client_fn=client_fn, 
-        num_clients=context.clients, 
-        config=fl.server.ServerConfig(num_rounds=context.rounds),  
-        strategy=strategy,  
-    )
+    def schedule_file_logging():
+        schedule.every(10).seconds.do(backend.write_experiment_results_callback('./flower.log', context.IDexperiment)) 
+    
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
 
-    logger.log("Finalizando experimento")
+    thread_schedulling = threading.Thread(target=schedule_file_logging)
+    thread_schedulling.daemon = True
+    thread_schedulling.start()
+
+    try:
+
+        strategy = CustomFedAvg(
+            fraction_fit=0.1,  
+            fraction_evaluate=0.1,  
+            min_available_clients=context.clients,  
+            evaluate_fn=eval_fn,
+            on_fit_config_fn=fit_config,
+            evaluate_metrics_aggregation_fn=client_fn(0).weighted_average
+        )  
+    
+        history = fl.simulation.start_simulation(
+            client_fn=client_fn, 
+            num_clients=context.clients, 
+            config=fl.server.ServerConfig(num_rounds=context.rounds),  
+            strategy=strategy,  
+        )
+
+        logger.log("Finalizando experimento")
+    except Exception as ex:
+        logger.log("Finalizando experimento com erro {}".format(repr))
     
     backend.write_experiment_results('./flower.log', context.IDexperiment)
 
