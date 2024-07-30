@@ -58,7 +58,7 @@ class Backend(object):
         def fn_callback():
             self.write_experiment_results(file_path=file_path, experiment=experiment)
                 
-        return fn_callback()
+        return fn_callback
         
 
 
