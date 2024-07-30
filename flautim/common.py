@@ -44,13 +44,14 @@ class Backend(object):
         with open(file_path, 'r') as file:
             content = file.read()
 
-        if cursor.hasNext():
+        doc = next(cursor, None)
+
+        if doc is None:
+            registro = {"Experiment": experiment, "content": content}
+            db.insert_one(registro)
+        else:
             newvalues = { "$set": { "content": content } }
             db.update_one(filter, newvalues)
-        else:
-            registro = {"Experiment": experiment,
-            "content": content}
-            db.insert_one(registro)
 
     
     def write_experiment_results_callback(self, file_path, experiment):
