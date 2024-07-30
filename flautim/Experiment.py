@@ -4,10 +4,33 @@ import numpy as np
 import os
 import flwr as fl
 #from flwr.common import NDArrays, Scalar
-from flautim import Model, Dataset
+from flautim import Model, Dataset, common
+
+class ExperimentContext(object):
+    def __init__(self, context):
+        super().__init__()
+        
+        self.context = context
+
+        backend = common.Backend(server = self.context.dbserver, port = self.context.dbport, user = self.context.dbuser, password=self.context.dbpw)
+
+        experiments = backend.get_db()['experimento']
+
+        self.id = self.context.IDExperiment
+
+        experiment = experiments.find({"_id": self.id}).next()
+
+        self.project = experiment["projectId"]
+
+        self.model = experiment["modelId"]
+
+        self.dataset = experiment["datasetId"]
+
+        self.acronym = experiment["acronym"]
+
 
 class Experiment(fl.client.NumPyClient):
-    def __init__(self, model : Model, dataset : Dataset, measures, logger,context, **kwargs) -> None:
+    def __init__(self, model : Model, dataset : Dataset, measures, logger, context, **kwargs) -> None:
         super().__init__()
         self.id = context.IDexperiment
         self.model = model
@@ -19,6 +42,13 @@ class Experiment(fl.client.NumPyClient):
         
         self.logger = logger
 
+        self.context = ExperimentContext(context)
+
+        self.model.id = self.context.model
+        self.dataset.id = self.context.dataset
+
+        self.model.logger = self.logger
+
     def set_parameters(self, parameters):
         self.model.set_parameters(parameters)
 
@@ -26,7 +56,7 @@ class Experiment(fl.client.NumPyClient):
         return self.model.get_parameters()
         
     def fit(self, parameters, config):
-        self.logger.log("Iniciando treinamento - Experiment {} - User {} - Model {} - Dataset {}".format(self.id, self.model.suffix, self.model.uid, self.dataset.name))
+        self.logger.log("Iniciando treinamento do modelo", details="", object="experiment_fit", object_id=self.id )
 
         self.model.set_parameters(parameters)
         
@@ -34,24 +64,22 @@ class Experiment(fl.client.NumPyClient):
 
         loss, acc = self.training_loop(self.dataset.dataloader())
 
-        self.logger.log("Terminando treinamento - Experiment {} - User {} - Model {} - Dataset {}".format(self.id, self.model.suffix, self.model.uid, self.dataset.name))
+        self.logger.log("Finalizando treinamento do modelo", details="", object="experiment_fit", object_id=self.id )
 
         self.model.save()
-        
 
         return self.model.get_parameters(), len(self.dataset.dataloader()), {"accuracy": float(acc)}
 
     def evaluate(self, parameters, config):
 
-        self.logger.log("Iniciando validação - Experiment {} - User {} - Model {} - Dataset {}".format(self.id, self.model.suffix, self.model.uid, self.dataset.name))
+        self.logger.log("Iniciando avaliação do modelo", details="", object="experiment_evaluate", object_id=self.id )
         
         self.model.set_parameters(parameters)
         
         loss, acc = self.validation_loop(self.dataset.dataloader(validation = True))
 
-        self.logger.log("Terminando validação - Experiment {} - User {} - Model {} - Dataset {}".format(self.id, self.model.suffix, self.model.uid, self.dataset.name))
+        self.logger.log("Finalizando avaliação do modelo", details="", object="experiment_evaluate", object_id=self.id )
         
-
         self.model.save()
         
         return float(loss), len(self.dataset.dataloader()), {"accuracy": float(acc), "loss" : float(loss)}

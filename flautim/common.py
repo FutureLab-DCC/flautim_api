@@ -94,7 +94,7 @@ class metrics(Enum):
      AUC = 13
      CROSSENTROPY = 14
      TIME = 15
-
+     
 
 class Measures(object):
     def __init__(self, context):
@@ -177,9 +177,9 @@ def run(client_fn, eval_fn, name_log = 'flower.log'):
     console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     flower_logger.addHandler(console_handler)
 
-    parser, context, backend, logger, measures = get_argparser()
+    _, context, backend, logger, _ = get_argparser()
     
-    logger.log("Iniciando experimento")
+    logger.log("Iniciando Flower", details="", object="experiment_run", object_id=context.IDexperiment )
 
     def schedule_file_logging():
         schedule.every(10).seconds.do(backend.write_experiment_results_callback('./flower.log', context.IDexperiment)) 
@@ -203,16 +203,16 @@ def run(client_fn, eval_fn, name_log = 'flower.log'):
             evaluate_metrics_aggregation_fn=client_fn(0).weighted_average
         )  
     
-        history = fl.simulation.start_simulation(
+        _ = fl.simulation.start_simulation(
             client_fn=client_fn, 
             num_clients=context.clients, 
             config=fl.server.ServerConfig(num_rounds=context.rounds),  
             strategy=strategy,  
         )
 
-        logger.log("Finalizando experimento")
+        logger.log("Finalizando Flower", details="", object="experiment_run", object_id=context.IDexperiment )
     except Exception as ex:
-        logger.log("Finalizando experimento com erro {}".format(repr(ex)))
+        logger.log("Erro Flower", details=repr(ex), object="experiment_run", object_id=context.IDexperiment )
     
     backend.write_experiment_results('./flower.log', context.IDexperiment)
 
