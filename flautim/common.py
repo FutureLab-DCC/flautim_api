@@ -212,7 +212,7 @@ def run(client_fn, eval_fn, name_log = 'flower.log'):
 
         logger.log("Finalizando experimento")
     except Exception as ex:
-        logger.log("Finalizando experimento com erro {}".format(repr))
+        logger.log("Finalizando experimento com erro {}".format(repr(ex)))
     
     backend.write_experiment_results('./flower.log', context.IDexperiment)
 

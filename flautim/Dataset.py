@@ -3,6 +3,7 @@ from torchvision.transforms import ToTensor, Normalize, Compose
 import torch
 import copy
 import numpy as np
+import uuid
 
 def collate_fn(data):
     imgs = []
@@ -17,6 +18,7 @@ def collate_fn(data):
 class Dataset(Dataset):
     def __init__(self, name, train_split = .8, **kwargs) -> None:
         super(Dataset, self).__init__()
+        self.id = kwargs.get("id",str(uuid.uuid1()))
         self.name = name
         self.train_split = train_split
         self.batch_size = kwargs.get("batch_size", 128)
