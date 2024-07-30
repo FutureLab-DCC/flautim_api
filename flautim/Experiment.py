@@ -7,17 +7,17 @@ import flwr as fl
 from flautim import Model, Dataset, common
 
 class ExperimentContext(object):
-    def __init__(self, context):
+    def __init__(self, context, no_db=False):
         super().__init__()
         
         self.context = context
 
+        self.id = self.context.IDexperiment
+
         backend = common.Backend(server = self.context.dbserver, port = self.context.dbport, user = self.context.dbuser, password=self.context.dbpw)
 
         experiments = backend.get_db()['experimento']
-
-        self.id = self.context.IDExperiment
-
+        
         experiment = experiments.find({"_id": self.id}).next()
 
         self.project = experiment["projectId"]
