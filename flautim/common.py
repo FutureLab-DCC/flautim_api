@@ -182,7 +182,7 @@ def run(client_fn, eval_fn, name_log = 'flower.log'):
     logger.log("Iniciando Flower", details="", object="experiment_run", object_id=context.IDexperiment )
 
     def schedule_file_logging():
-        schedule.every(10).seconds.do(backend.write_experiment_results_callback('./flower.log', context.IDexperiment)) 
+        schedule.every(2).seconds.do(backend.write_experiment_results_callback('./flower.log', context.IDexperiment)) 
     
         while True:
             schedule.run_pending()
