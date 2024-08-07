@@ -201,7 +201,9 @@ def run(client_fn, eval_fn, name_log = 'flower.log'):
             evaluate_fn=eval_fn,
             on_fit_config_fn=fit_config,
             evaluate_metrics_aggregation_fn=client_fn(0).weighted_average
-        )  
+        )
+
+        update_experiment_status(backend, context.IDexperiment, "running")  
     
         _ = fl.simulation.start_simulation(
             client_fn=client_fn, 
@@ -210,8 +212,11 @@ def run(client_fn, eval_fn, name_log = 'flower.log'):
             strategy=strategy,  
         )
 
+        update_experiment_status(backend, context.IDexperiment, "finished")  
+
         logger.log("Finalizando Flower", details="", object="experiment_run", object_id=context.IDexperiment )
     except Exception as ex:
+        update_experiment_status(backend, context.IDexperiment, "error")  
         logger.log("Erro Flower", details=repr(ex), object="experiment_run", object_id=context.IDexperiment )
     
     backend.write_experiment_results('./flower.log', context.IDexperiment)
@@ -237,4 +242,9 @@ def get_argparser():
     
     return parser, context, backend, logger, measures
 
-# logger.log("Inicializando ambiente!")
+
+def update_experiment_status(backend, id, status):
+    filter = { '_id': id }
+    newvalues = { "$set": { 'status': status } }
+    experiments = backend.get_db()['experimento']
+    experiments.update_one(filter, newvalues)

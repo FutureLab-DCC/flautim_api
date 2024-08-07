@@ -1,10 +1,17 @@
 import argparse
 import numpy as np
-
+from enum import StrEnum
 import os
 import flwr as fl
 #from flwr.common import NDArrays, Scalar
 from flautim import Model, Dataset, common
+
+class ExperimentStatus(StrEnum):
+    RUNNING = "running"
+    FINISHED = "finished"
+    ABORTED = "aborted"
+    ERROR = "error"
+
 
 class ExperimentContext(object):
     def __init__(self, context, no_db=False):
@@ -16,9 +23,9 @@ class ExperimentContext(object):
 
         backend = common.Backend(server = self.context.dbserver, port = self.context.dbport, user = self.context.dbuser, password=self.context.dbpw)
 
-        experiments = backend.get_db()['experimento']
+        self.experiments = backend.get_db()['experimento']
         
-        experiment = experiments.find({"_id": self.id}).next()
+        experiment = self.experiments.find({"_id": self.id}).next()
 
         self.project = experiment["projectId"]
 
@@ -27,6 +34,11 @@ class ExperimentContext(object):
         self.dataset = experiment["datasetId"]
 
         self.acronym = experiment["acronym"]
+
+    def status(self, stat: ExperimentStatus):
+        filter = { '_id': self.id }
+        newvalues = { "$set": { 'status': str(stat) } }
+        self.experiments.update_one(filter, newvalues)
 
 
 class Experiment(fl.client.NumPyClient):
@@ -48,6 +60,12 @@ class Experiment(fl.client.NumPyClient):
         self.dataset.id = self.context.dataset
 
         self.model.logger = self.logger
+
+    def status(self, stat: ExperimentStatus):
+        try:
+            self.context.status(stat)
+        except Exception as ex:
+            self.logger.log("Falha ao atualizar status", details=str(ex), object="experiment_fit", object_id=self.id )
 
     def set_parameters(self, parameters):
         self.model.set_parameters(parameters)
