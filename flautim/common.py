@@ -9,6 +9,8 @@ import schedule
 import logging
 from typing import List, Tuple, Dict
 import numpy as np
+from pathlib import Path
+import shutil
 
 from flwr.server.strategy.aggregate import weighted_loss_avg
 
@@ -160,7 +162,7 @@ class CustomFedAvg(fl.server.strategy.FedAvg):
         return loss_aggregated, metrics_aggregated
 
     
-def run(client_fn, eval_fn, name_log = 'flower.log'):
+def run(client_fn, eval_fn, name_log = 'flower.log', post_processing_fn = []):
 
     logging.basicConfig(filename=name_log,
                     filemode='w',  # 'a' para append, 'w' para sobrescrever
@@ -212,7 +214,9 @@ def run(client_fn, eval_fn, name_log = 'flower.log'):
             strategy=strategy,  
         )
 
-        update_experiment_status(backend, context.IDexperiment, "finished")  
+        update_experiment_status(backend, context.IDexperiment, "finished") 
+
+        copy_model_wights(context, logger) 
 
         logger.log("Finalizando Flower", details="", object="experiment_run", object_id=context.IDexperiment )
     except Exception as ex:
@@ -226,6 +230,7 @@ def get_argparser():
     
     parser.add_argument("--user", type=str, required=True)
     parser.add_argument("--path", type=str, required=True)
+    parser.add_argument("--output-path", type=str, required=True)
     parser.add_argument("--dbserver", type=str, required=False, default="127.0.0.1")
     parser.add_argument("--dbport", type=str, required=False, default="27017")
     parser.add_argument("--dbuser", type=str, required=True)
@@ -248,3 +253,25 @@ def update_experiment_status(backend, id, status):
     newvalues = { "$set": { 'status': status } }
     experiments = backend.get_db()['experimento']
     experiments.update_one(filter, newvalues)
+
+
+def copy_model_wights(context, logger):
+    try:
+        path = context.path
+        output_path = context.output_path
+
+        p = Path(path+"models/").glob('**/*')
+        files = [x for x in p if x.is_file()]
+
+        for file in files:
+            nf = Path(output_path + file.name)
+            if nf.exists():
+                nf.unlink()
+            shutil.copy(file.resolve(), nf.resolve())
+            logger.log("Arquivos de parametros dos modelos treinados", details=file.name, object="filesystem.file", object_id=context.IDexperiment )
+    except Exception as e:
+        logger.log("Erro ao copiar arquivos dos modelos treinados", details=str(e), object="filesystem.file", object_id=context.IDexperiment )
+
+    
+
+
