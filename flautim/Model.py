@@ -33,6 +33,7 @@ class Model(nn.Module):
         params_dict = zip(self.state_dict().keys(), parameters)
         state_dict = OrderedDict({k: torch.Tensor(v) for k, v in params_dict})
         self.load_state_dict(state_dict, strict=True)
+        self.save()
 
     def get_parameters(self):
         return [val.cpu().numpy() for _, val in self.state_dict().items()]

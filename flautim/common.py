@@ -264,7 +264,7 @@ def copy_model_wights(context, logger):
         files = [x for x in p if x.is_file()]
 
         for file in files:
-            nf = Path(output_path + file.name)
+            nf = Path(output_path + file.stem + "_weights" + file.suffix)
             if nf.exists():
                 nf.unlink()
             shutil.copy(file.resolve(), nf.resolve())
