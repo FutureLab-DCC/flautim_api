@@ -1,12 +1,12 @@
 import argparse
 import numpy as np
-from enum import StrEnum
+from enum import Enum
 import os
 import flwr as fl
 #from flwr.common import NDArrays, Scalar
 from flautim import Model, Dataset, common
 
-class ExperimentStatus(StrEnum):
+class ExperimentStatus(str, Enum):
     RUNNING = "running"
     FINISHED = "finished"
     ABORTED = "aborted"
