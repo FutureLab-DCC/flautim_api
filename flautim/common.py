@@ -73,7 +73,7 @@ class Logger(object):
         self.context = context
         
     def log(self, msg : str, **append):
-        ts = time.time()
+        ts = "$$now"
         data = { "user": self.context.user, "timestamp": ts, "message" : msg }
         if append is not None:
                 data.update(append)
