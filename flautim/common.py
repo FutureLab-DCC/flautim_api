@@ -1,5 +1,5 @@
 import pymongo
-import time
+from datetime import datetime
 import argparse
 from enum import Enum
 import flwr as fl
@@ -73,7 +73,7 @@ class Logger(object):
         self.context = context
         
     def log(self, msg : str, **append):
-        ts = "$$now"
+        ts = str(datetime.now())
         data = { "user": self.context.user, "timestamp": ts, "message" : msg }
         if append is not None:
                 data.update(append)
@@ -105,7 +105,7 @@ class Measures(object):
         self.context = context
         
     def log(self, experiment, metric, values, validation = False, **append):
-        ts = time.time()
+        ts = str(datetime.now())
         data = { "Experiment": self.context.IDexperiment, "user": experiment.model.suffix, "timestamp": ts,
                  "metric" : str(metric), "model" : experiment.model.uid, "dataset": experiment.dataset.name, 
                 "values": values, "validation": validation,
