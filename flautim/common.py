@@ -261,10 +261,10 @@ def copy_model_wights(context, logger):
         output_path = context.output_path
 
         p = Path(path+"models/").glob('**/*')
-        files = [x for x in p if x.is_file()]
+        files = [x for x in p if x.is_file() and file.stem.contains('FL-Global')]
 
         for file in files:
-            nf = Path(output_path + file.stem + "_weights" + file.suffix)
+            nf = Path(output_path + str(context.IDExperiment) + "_weights" + file.suffix)
             if nf.exists():
                 nf.unlink()
             shutil.copy(file.resolve(), nf.resolve())
