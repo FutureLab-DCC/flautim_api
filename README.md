@@ -1,2 +1,3 @@
-# programming_api
-FutureLab Federated Learning Platform - Programming API
+# Flautim API
+
+Programming API for model development in Flautim Framework
