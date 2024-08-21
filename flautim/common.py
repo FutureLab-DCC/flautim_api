@@ -261,7 +261,7 @@ def copy_model_wights(context, logger):
         output_path = context.output_path
 
         p = Path(path+"models/").glob('**/*')
-        files = [x for x in p if x.is_file() and file.stem.contains('FL-Global')]
+        files = [x for x in p if x.is_file() and 'FL-Global' in file.stem]
 
         for file in files:
             nf = Path(output_path + str(context.IDExperiment) + "_weights" + file.suffix)
