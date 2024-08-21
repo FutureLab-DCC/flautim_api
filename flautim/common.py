@@ -261,14 +261,15 @@ def copy_model_wights(context, logger):
         output_path = context.output_path
 
         p = Path(path+"models/").glob('**/*')
-        files = [x for x in p if x.is_file() and 'FL-Global' in file.stem]
+        files = [x for x in p if x.is_file()]
 
         for file in files:
-            nf = Path(output_path + str(context.IDExperiment) + "_weights" + file.suffix)
-            if nf.exists():
-                nf.unlink()
-            shutil.copy(file.resolve(), nf.resolve())
-            logger.log("Arquivos de parametros dos modelos treinados", details=file.name, object="filesystem.file", object_id=context.IDexperiment )
+            if 'FL-Global' in file.stem:
+                nf = Path(output_path + str(context.IDExperiment) + "_weights" + file.suffix)
+                if nf.exists():
+                    nf.unlink()
+                shutil.copy(file.resolve(), nf.resolve())
+                logger.log("Arquivos de parametros dos modelos treinados", details=file.name, object="filesystem.file", object_id=context.IDexperiment )
     except Exception as e:
         logger.log("Erro ao copiar arquivos dos modelos treinados", details=str(e), object="filesystem.file", object_id=context.IDexperiment )
 
