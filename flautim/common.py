@@ -264,7 +264,7 @@ def copy_model_wights(context, logger):
         files = [x for x in p if x.is_file()]
 
         for file in files:
-            if 'FL-Global' in file.stem:
+            if "FL-Global" in str(file.stem):
                 nf = Path(output_path + str(context.IDExperiment) + "_weights" + file.suffix)
                 if nf.exists():
                     nf.unlink()
