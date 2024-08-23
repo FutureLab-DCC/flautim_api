@@ -11,6 +11,7 @@ from typing import List, Tuple, Dict
 import numpy as np
 from pathlib import Path
 import shutil
+import time
 
 from flwr.server.strategy.aggregate import weighted_loss_avg
 
@@ -202,7 +203,7 @@ def run(client_fn, eval_fn, name_log = 'flower.log', post_processing_fn = []):
             min_available_clients=context.clients,  
             evaluate_fn=eval_fn,
             on_fit_config_fn=fit_config,
-            evaluate_metrics_aggregation_fn=client_fn(0).weighted_average
+            evaluate_metrics_aggregation_fn=client_fn("FL-Global").weighted_average
         )
 
         update_experiment_status(backend, context.IDexperiment, "running")  
@@ -269,9 +270,9 @@ def copy_model_wights(context, logger):
                 if nf.exists():
                     nf.unlink()
                 shutil.copy(file.resolve(), nf.resolve())
-                logger.log("Arquivos de parametros dos modelos treinados", details=file.name, object="filesystem.file", object_id=context.IDexperiment )
+                logger.log("Arquivos de parametros dos modelos treinados", details=file.name, object="filesystem_file", object_id=context.IDexperiment )
     except Exception as e:
-        logger.log("Erro ao copiar arquivos dos modelos treinados", details=str(e), object="filesystem.file", object_id=context.IDexperiment )
+        logger.log("Erro ao copiar arquivos dos modelos treinados", details=str(e), object="filesystem_file", object_id=context.IDexperiment )
 
     
 
