@@ -65,7 +65,7 @@ class Experiment(fl.client.NumPyClient):
         try:
             self.context.status(stat)
         except Exception as ex:
-            self.logger.log("Falha ao atualizar status", details=str(ex), object="experiment_fit", object_id=self.id )
+            self.logger.log("Error while updating status", details=str(ex), object="experiment_fit", object_id=self.id )
 
     def set_parameters(self, parameters):
         self.model.set_parameters(parameters)
@@ -74,7 +74,7 @@ class Experiment(fl.client.NumPyClient):
         return self.model.get_parameters()
         
     def fit(self, parameters, config):
-        self.logger.log("Iniciando treinamento do modelo", details="", object="experiment_fit", object_id=self.id )
+        self.logger.log("Model training started", details="", object="experiment_fit", object_id=self.id )
 
         self.model.set_parameters(parameters)
         
@@ -82,7 +82,7 @@ class Experiment(fl.client.NumPyClient):
 
         loss, acc = self.training_loop(self.dataset.dataloader())
 
-        self.logger.log("Finalizando treinamento do modelo", details="", object="experiment_fit", object_id=self.id )
+        self.logger.log("Model training finished", details="", object="experiment_fit", object_id=self.id )
 
         self.model.save()
 
@@ -90,13 +90,13 @@ class Experiment(fl.client.NumPyClient):
 
     def evaluate(self, parameters, config):
 
-        self.logger.log("Iniciando avaliação do modelo", details="", object="experiment_evaluate", object_id=self.id )
+        self.logger.log("Model evaluation started", details="", object="experiment_evaluate", object_id=self.id )
         
         self.model.set_parameters(parameters)
         
         loss, acc = self.validation_loop(self.dataset.dataloader(validation = True))
 
-        self.logger.log("Finalizando avaliação do modelo", details="", object="experiment_evaluate", object_id=self.id )
+        self.logger.log("Model training finished", details="", object="experiment_evaluate", object_id=self.id )
         
         self.model.save()
         

@@ -182,7 +182,7 @@ def run(client_fn, eval_fn, name_log = 'flower.log', post_processing_fn = []):
 
     _, context, backend, logger, _ = get_argparser()
     
-    logger.log("Iniciando Flower", details="", object="experiment_run", object_id=context.IDexperiment )
+    logger.log("Starting Flower Engine", details="", object="experiment_run", object_id=context.IDexperiment )
 
     def schedule_file_logging():
         schedule.every(2).seconds.do(backend.write_experiment_results_callback('./flower.log', context.IDexperiment)) 
@@ -219,10 +219,10 @@ def run(client_fn, eval_fn, name_log = 'flower.log', post_processing_fn = []):
 
         copy_model_wights(context, logger) 
 
-        logger.log("Finalizando Flower", details="", object="experiment_run", object_id=context.IDexperiment )
+        logger.log("Stopping Flower Engine", details="", object="experiment_run", object_id=context.IDexperiment )
     except Exception as ex:
         update_experiment_status(backend, context.IDexperiment, "error")  
-        logger.log("Erro Flower", details=repr(ex), object="experiment_run", object_id=context.IDexperiment )
+        logger.log("Erro while running Flower", details=str(ex), object="experiment_run", object_id=context.IDexperiment )
     
     backend.write_experiment_results('./flower.log', context.IDexperiment)
 
@@ -270,9 +270,9 @@ def copy_model_wights(context, logger):
                 if nf.exists():
                     nf.unlink()
                 shutil.copy(file.resolve(), nf.resolve())
-                logger.log("Arquivos de parametros dos modelos treinados", details=file.name, object="filesystem_file", object_id=context.IDexperiment )
+                logger.log("Model weights successfully copied", details=file.name, object="filesystem_file", object_id=context.IDexperiment )
     except Exception as e:
-        logger.log("Erro ao copiar arquivos dos modelos treinados", details=str(e), object="filesystem_file", object_id=context.IDexperiment )
+        logger.log("Erro while copying model wights", details=str(e), object="filesystem_file", object_id=context.IDexperiment )
 
     
 
