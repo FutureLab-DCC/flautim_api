@@ -217,7 +217,7 @@ def run(client_fn, eval_fn, name_log = 'flower.log', post_processing_fn = []):
 
         update_experiment_status(backend, context.IDexperiment, "finished") 
 
-        copy_model_wights(context, logger) 
+        copy_model_wights(context.path, context.output_path, context.IDExperiment, logger) 
 
         logger.log("Stopping Flower Engine", details="", object="experiment_run", object_id=context.IDexperiment )
     except Exception as ex:
@@ -256,23 +256,20 @@ def update_experiment_status(backend, id, status):
     experiments.update_one(filter, newvalues)
 
 
-def copy_model_wights(context, logger):
+def copy_model_wights(path, output_path, id, logger):
     try:
-        path = context.path
-        output_path = context.output_path
-
         p = Path(path+"models/").glob('**/*')
         files = [x for x in p if x.is_file()]
 
         for file in files:
             if "FL-Global" in str(file.stem):
-                nf = Path(output_path + str(context.IDExperiment) + "_weights" + file.suffix)
+                nf = Path(output_path + str(id) + "_weights" + file.suffix)
                 if nf.exists():
                     nf.unlink()
                 shutil.copy(file.resolve(), nf.resolve())
-                logger.log("Model weights successfully copied", details=file.name, object="filesystem_file", object_id=context.IDexperiment )
+                logger.log("Model weights successfully copied", details=file.name, object="filesystem_file", object_id=id )
     except Exception as e:
-        logger.log("Erro while copying model wights", details=str(e), object="filesystem_file", object_id=context.IDexperiment )
+        logger.log("Erro while copying model wights", details=str(e), object="filesystem_file", object_id=id )
 
     
 
