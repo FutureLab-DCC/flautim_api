@@ -181,11 +181,16 @@ def run(client_fn, eval_fn, name_log = 'flower.log', post_processing_fn = []):
     flower_logger.addHandler(console_handler)
 
     _, context, backend, logger, _ = get_argparser()
+    experiment_id = context.IDExperiment
+    path = context.path
+    output_path = context.output_path
+    num_clients = context.clients
+    num_rounds = context.rounds
     
-    logger.log("Starting Flower Engine", details="", object="experiment_run", object_id=context.IDexperiment )
+    logger.log("Starting Flower Engine", details="", object="experiment_run", object_id=experiment_id )
 
     def schedule_file_logging():
-        schedule.every(2).seconds.do(backend.write_experiment_results_callback('./flower.log', context.IDexperiment)) 
+        schedule.every(2).seconds.do(backend.write_experiment_results_callback('./flower.log', experiment_id)) 
     
         while True:
             schedule.run_pending()
@@ -200,31 +205,31 @@ def run(client_fn, eval_fn, name_log = 'flower.log', post_processing_fn = []):
         strategy = CustomFedAvg(
             fraction_fit=0.1,  
             fraction_evaluate=0.1,  
-            min_available_clients=context.clients,  
+            min_available_clients=num_clients,  
             evaluate_fn=eval_fn,
             on_fit_config_fn=fit_config,
             evaluate_metrics_aggregation_fn=client_fn("FL-Global").weighted_average
         )
 
-        update_experiment_status(backend, context.IDexperiment, "running")  
+        update_experiment_status(backend, experiment_id, "running")  
     
         _ = fl.simulation.start_simulation(
             client_fn=client_fn, 
-            num_clients=context.clients, 
-            config=fl.server.ServerConfig(num_rounds=context.rounds),  
+            num_clients=num_clients, 
+            config=fl.server.ServerConfig(num_rounds=num_rounds),  
             strategy=strategy,  
         )
 
-        update_experiment_status(backend, context.IDexperiment, "finished") 
+        update_experiment_status(backend, experiment_id, "finished") 
 
-        copy_model_wights(context.path, context.output_path, context.IDExperiment, logger) 
+        copy_model_wights(path, output_path, experiment_id, logger) 
 
-        logger.log("Stopping Flower Engine", details="", object="experiment_run", object_id=context.IDexperiment )
+        logger.log("Stopping Flower Engine", details="", object="experiment_run", object_id=experiment_id )
     except Exception as ex:
-        update_experiment_status(backend, context.IDexperiment, "error")  
-        logger.log("Erro while running Flower", details=str(ex), object="experiment_run", object_id=context.IDexperiment )
+        update_experiment_status(backend, experiment_id, "error")  
+        logger.log("Error while running Flower", details=str(ex), object="experiment_run", object_id=experiment_id )
     
-    backend.write_experiment_results('./flower.log', context.IDexperiment)
+    backend.write_experiment_results('./flower.log', experiment_id)
 
 def get_argparser():
     parser = argparse.ArgumentParser()
