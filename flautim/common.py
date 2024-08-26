@@ -180,12 +180,12 @@ def run(client_fn, eval_fn, name_log = 'flower.log', post_processing_fn = []):
     console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     flower_logger.addHandler(console_handler)
 
-    _, context, backend, logger, _ = get_argparser()
-    experiment_id = context.IDExperiment
-    path = context.path
-    output_path = context.output_path
-    num_clients = context.clients
-    num_rounds = context.rounds
+    _, ctx, backend, logger, _ = get_argparser()
+    experiment_id = ctx.IDExperiment
+    path = ctx.path
+    output_path = ctx.output_path
+    num_clients = ctx.clients
+    num_rounds = ctx.rounds
     
     logger.log("Starting Flower Engine", details="", object="experiment_run", object_id=experiment_id )
 
@@ -244,14 +244,14 @@ def get_argparser():
     parser.add_argument("--clients", type=int, required=False, default=3)
     parser.add_argument("--rounds", type=int, required=False, default=10)
     parser.add_argument("--IDexperiment", type=str, required=True, default=0)
-    context = parser.parse_args()
+    ctx = parser.parse_args()
     
-    backend = Backend(server = context.dbserver, port = context.dbport, user = context.dbuser, password=context.dbpw)
+    backend = Backend(server = ctx.dbserver, port = ctx.dbport, user = ctx.dbuser, password=ctx.dbpw)
     
-    logger = Logger(backend, context)
-    measures = Measures(context)
+    logger = Logger(backend, ctx)
+    measures = Measures(ctx)
     
-    return parser, context, backend, logger, measures
+    return parser, ctx, backend, logger, measures
 
 
 def update_experiment_status(backend, id, status):
