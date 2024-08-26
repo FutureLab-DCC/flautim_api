@@ -181,7 +181,7 @@ def run(client_fn, eval_fn, name_log = 'flower.log', post_processing_fn = []):
     flower_logger.addHandler(console_handler)
 
     _, ctx, backend, logger, _ = get_argparser()
-    experiment_id = ctx.IDExperiment
+    experiment_id = ctx.IDexperiment
     path = ctx.path
     output_path = ctx.output_path
     num_clients = ctx.clients
