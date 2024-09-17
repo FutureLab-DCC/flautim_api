@@ -1,47 +1,11 @@
 import argparse
-import numpy as np
+from flautim.pytorch import Dataset, common
 from enum import Enum
 import os
-import flwr as fl
-#from flwr.common import NDArrays, Scalar
-from flautim import Model, Dataset, common
+from flautim.pytorch import Model
+from flautim.pytorch.common import ExperimentContext, ExperimentStatus
 
-class ExperimentStatus(str, Enum):
-    RUNNING = "running"
-    FINISHED = "finished"
-    ABORTED = "aborted"
-    ERROR = "error"
-
-
-class ExperimentContext(object):
-    def __init__(self, context, no_db=False):
-        super().__init__()
-        
-        self.context = context
-
-        self.id = self.context.IDexperiment
-
-        backend = common.Backend(server = self.context.dbserver, port = self.context.dbport, user = self.context.dbuser, password=self.context.dbpw)
-
-        self.experiments = backend.get_db()['experimento']
-        
-        experiment = self.experiments.find({"_id": self.id}).next()
-
-        self.project = experiment["projectId"]
-
-        self.model = experiment["modelId"]
-
-        self.dataset = experiment["datasetId"]
-
-        self.acronym = experiment["acronym"]
-
-    def status(self, stat: ExperimentStatus):
-        filter = { '_id': self.id }
-        newvalues = { "$set": { 'status': str(stat) } }
-        self.experiments.update_one(filter, newvalues)
-
-
-class Experiment(fl.client.NumPyClient):
+class Experiment(object):
     def __init__(self, model : Model, dataset : Dataset, measures, logger, context, **kwargs) -> None:
         super().__init__()
         self.id = context.IDexperiment
@@ -49,8 +13,6 @@ class Experiment(fl.client.NumPyClient):
         self.dataset = dataset
         
         self.measures = measures
-        
-        self.epoch_fl = 0
         
         self.logger = logger
 
@@ -78,8 +40,6 @@ class Experiment(fl.client.NumPyClient):
 
         self.model.set_parameters(parameters)
         
-        self.epoch_fl = config["server_round"]
-
         loss, acc = self.training_loop(self.dataset.dataloader())
 
         self.logger.log("Model training finished", details="", object="experiment_fit", object_id=self.id )
@@ -107,4 +67,4 @@ class Experiment(fl.client.NumPyClient):
 
     def validation_loop(self, data_loader):
         raise NotImplementedError("The validation_loop method should be implemented!")
-        
+    
