@@ -99,6 +99,41 @@ class metrics(Enum):
      TIME = 15
      
 
+class ExperimentStatus(str, Enum):
+    RUNNING = "running"
+    FINISHED = "finished"
+    ABORTED = "aborted"
+    ERROR = "error"
+
+
+class ExperimentContext(object):
+    def __init__(self, context, no_db=False):
+        super().__init__()
+        
+        self.context = context
+
+        self.id = self.context.IDexperiment
+
+        backend = Backend(server = self.context.dbserver, port = self.context.dbport, user = self.context.dbuser, password=self.context.dbpw)
+
+        self.experiments = backend.get_db()['experimento']
+        
+        experiment = self.experiments.find({"_id": self.id}).next()
+
+        self.project = experiment["projectId"]
+
+        self.model = experiment["modelId"]
+
+        self.dataset = experiment["datasetId"]
+
+        self.acronym = experiment["acronym"]
+
+    def status(self, stat: ExperimentStatus):
+        filter = { '_id': self.id }
+        newvalues = { "$set": { 'status': str(stat) } }
+        self.experiments.update_one(filter, newvalues)
+
+
 class Measures(object):
     def __init__(self, context):
         super().__init__()
@@ -127,6 +162,58 @@ def fit_config(server_round: int):
         "server_round": server_round,  # The current round of federated learning
     }
     return config
+
+
+def run_centralized(experiment, name_log = 'centralized.log', post_processing_fn = []):
+
+    logging.basicConfig(filename=name_log,
+                    filemode='w',  # 'a' para append, 'w' para sobrescrever
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+    
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+
+    root.addHandler(console_handler)
+
+    _, ctx, backend, logger, _ = get_argparser()
+    experiment_id = ctx.IDexperiment
+    path = ctx.path
+    output_path = ctx.output_path
+    epochs = ctx.epochs
+    
+    logger.log("Starting Centralized Training", details="", object="experiment_run", object_id=experiment_id )
+
+    def schedule_file_logging():
+        schedule.every(2).seconds.do(backend.write_experiment_results_callback('./centralized.log', experiment_id)) 
+    
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+
+    thread_schedulling = threading.Thread(target=schedule_file_logging)
+    thread_schedulling.daemon = True
+    thread_schedulling.start()
+
+    try:
+        update_experiment_status(backend, experiment_id, "running")  
+
+        experiment.fit()
+    
+        update_experiment_status(backend, experiment_id, "finished") 
+
+        copy_model_wights(path, output_path, experiment_id, logger) 
+
+        logger.log("Finishing Centralized Training", details="", object="experiment_run", object_id=experiment_id )
+    except Exception as ex:
+        update_experiment_status(backend, experiment_id, "error")  
+        logger.log("Error during Centralized Training", details=str(ex), object="experiment_run", object_id=experiment_id )
+    
+    backend.write_experiment_results('./centralized.log', experiment_id)
 
 
 class CustomFedAvg(fl.server.strategy.FedAvg):
@@ -163,7 +250,7 @@ class CustomFedAvg(fl.server.strategy.FedAvg):
         return loss_aggregated, metrics_aggregated
 
     
-def run(client_fn, eval_fn, name_log = 'flower.log', post_processing_fn = []):
+def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_fn = []):
 
     logging.basicConfig(filename=name_log,
                     filemode='w',  # 'a' para append, 'w' para sobrescrever
@@ -243,6 +330,7 @@ def get_argparser():
     parser.add_argument("--dbpw", type=str, required=True)
     parser.add_argument("--clients", type=int, required=False, default=3)
     parser.add_argument("--rounds", type=int, required=False, default=10)
+    parser.add_argument("--epochs", type=int, required=False, default=10)
     parser.add_argument("--IDexperiment", type=str, required=True, default=0)
     ctx = parser.parse_args()
     
