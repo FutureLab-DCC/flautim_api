@@ -9,10 +9,10 @@ def collate_fn(data):
     imgs = []
     lbls = []
     for img, lbl in data:
-        imgs.append(img)
-        lbls.append(lbl)
-    imgs = torch.from_numpy(np.array(imgs))
-    lbls = torch.from_numpy(np.array(lbls).flatten())
+        imgs.append(np.array(img, dtype=np.float32))  
+        lbls.append(np.array(lbl, dtype=np.int64))    
+    imgs = torch.from_numpy(np.stack(imgs, axis=0)) 
+    lbls = torch.tensor(lbls, dtype=torch.int64)     
     return imgs, lbls
 
 class Dataset(Dataset):

@@ -96,7 +96,10 @@ class metrics(Enum):
      F1SCORE = 12
      AUC = 13
      CROSSENTROPY = 14
-     TIME = 15
+     TIME = 15,
+     OTHER1 = 16,
+     OTHER2 = 17,
+     OTHER3 = 18
      
 
 class ExperimentStatus(str, Enum):
