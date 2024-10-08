@@ -3,7 +3,7 @@ from flautim.pytorch import Dataset, common
 from enum import Enum
 import os
 from flautim.pytorch import Model
-from flautim.pytorch.common import ExperimentContext, ExperimentStatus
+from flautim.pytorch.common import ExperimentContext, ExperimentStatus, metrics
 import time
 
 class Experiment(object):
