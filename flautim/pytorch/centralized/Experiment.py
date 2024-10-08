@@ -22,6 +22,7 @@ class Experiment(object):
         self.dataset.id = self.context.dataset
 
         self.model.logger = self.logger
+        self.epochs = kwargs.get('epochs', 1)
 
     def status(self, stat: ExperimentStatus):
         try:
