@@ -45,7 +45,7 @@ class Experiment(object):
             epoch_loss, acc = self.training_loop(self.dataset.dataloader())
             elapsed_time = time.time() - start_time
             self.logger.log(f'[TRAIN] Epoch [{epoca+1}] Training Loss: {epoch_loss:.4f}, ' +
-                f', Time: {elapsed_time:.2f} seconds', details="", object="experiment_fit", object_id=self.id )
+                f'Time: {elapsed_time:.2f} seconds', details="", object="experiment_fit", object_id=self.id )
 
         self.logger.log("Model training finished", details="", object="experiment_fit", object_id=self.id )
 
