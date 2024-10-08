@@ -39,7 +39,8 @@ class Experiment(object):
     def fit(self, **kwargs):
         self.logger.log("Model training started", details="", object="experiment_fit", object_id=self.id )
 
-        loss, acc = self.training_loop(self.dataset.dataloader())
+        for epoca in range(self.epochs):
+            loss, acc = self.training_loop(self.dataset.dataloader())
 
         self.logger.log("Model training finished", details="", object="experiment_fit", object_id=self.id )
 
