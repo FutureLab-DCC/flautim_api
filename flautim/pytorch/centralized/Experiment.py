@@ -4,6 +4,7 @@ from enum import Enum
 import os
 from flautim.pytorch import Model
 from flautim.pytorch.common import ExperimentContext, ExperimentStatus
+import time
 
 class Experiment(object):
     def __init__(self, model : Model, dataset : Dataset, measures, logger, context, **kwargs) -> None:
