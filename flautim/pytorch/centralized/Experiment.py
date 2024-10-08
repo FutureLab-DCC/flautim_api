@@ -24,6 +24,7 @@ class Experiment(object):
 
         self.model.logger = self.logger
         self.epochs = kwargs.get('epochs', 1)
+        self.epoch_fl = 0
 
     def status(self, stat: ExperimentStatus):
         try:
