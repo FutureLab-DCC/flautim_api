@@ -23,8 +23,6 @@ class Experiment(object):
 
         self.model.logger = self.logger
 
-        self.epochs = kwargs.get('epochs', 1)
-
     def status(self, stat: ExperimentStatus):
         try:
             self.context.status(stat)
