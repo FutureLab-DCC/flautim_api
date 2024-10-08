@@ -49,8 +49,8 @@ class Experiment(object):
             self.logger.log(f'[TRAIN] Epoch [{epoca+1}] Training Loss: {epoch_loss:.4f}, ' +
                 f'Time: {elapsed_time:.2f} seconds', details="", object="experiment_fit", object_id=self.id )
             
-            self.measures.log(self, metrics.CROSSENTROPY, epoch_loss / len(self.dataset), validation=False)
-            self.measures.log(self, metrics.ACCURACY, acc/len(self.dataset), validation=False)
+            self.measures.log(self, metrics.CROSSENTROPY, epoch_loss, validation=False)
+            self.measures.log(self, metrics.ACCURACY, acc, validation=False)
 
         self.logger.log("Model training finished", details="", object="experiment_fit", object_id=self.id )
 
