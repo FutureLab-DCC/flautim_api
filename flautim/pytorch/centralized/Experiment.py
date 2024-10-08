@@ -41,7 +41,12 @@ class Experiment(object):
         self.logger.log("Model training started", details="", object="experiment_fit", object_id=self.id )
 
         for epoca in range(self.epochs):
-            loss, acc = self.training_loop(self.dataset.dataloader())
+            start_time = time.time()
+            epoch_loss, acc = self.training_loop(self.dataset.dataloader())
+            elapsed_time = time.time() - start_time
+            self.logger.log(f'[TRAIN] Epoch [{epoca+1}] Training Loss: {epoch_loss:.4f}, '
+                + ', '.join([f'{name}: {value:.4f}' for name, value in ["Acc", acc]]) +
+                f', Time: {elapsed_time:.2f} seconds')
 
         self.logger.log("Model training finished", details="", object="experiment_fit", object_id=self.id )
 
