@@ -48,6 +48,9 @@ class Experiment(object):
             self.epoch_fl = epoca
             self.logger.log(f'[TRAIN] Epoch [{epoca+1}] Training Loss: {epoch_loss:.4f}, ' +
                 f'Time: {elapsed_time:.2f} seconds', details="", object="experiment_fit", object_id=self.id )
+            
+            self.measures.log(self, metrics.CROSSENTROPY, custo / len(self.dataset), validation=False)
+            self.measures.log(self, metrics.ACCURACY, correct/len(self.dataset), validation=False)
 
         self.logger.log("Model training finished", details="", object="experiment_fit", object_id=self.id )
 
