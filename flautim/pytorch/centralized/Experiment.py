@@ -46,7 +46,7 @@ class Experiment(object):
             epoch_loss, acc = self.training_loop(self.dataset.dataloader())
             elapsed_time = time.time() - start_time
             self.epoch_fl = epoca
-            self.logger.log(f'[TRAIN] Epoch [{epoca+1}] Training Loss: {epoch_loss:.4f}, ' +
+            self.logger.log(f'[TRAIN] Epoch [{epoca}] Training Loss: {epoch_loss:.4f}, ' +
                 f'Time: {elapsed_time:.2f} seconds', details="", object="experiment_fit", object_id=self.id )
             
             self.measures.log(self, metrics.CROSSENTROPY, epoch_loss, validation=False)
