@@ -41,7 +41,7 @@ class Experiment(object):
     def fit(self, **kwargs):
         self.logger.log("Model training started", details="", object="experiment_fit", object_id=self.id )
 
-        for epoca in range(self.epochs):
+        for epoca in range(1, self.epochs+1):
             start_time = time.time()
             epoch_loss, acc = self.training_loop(self.dataset.dataloader())
             elapsed_time = time.time() - start_time
