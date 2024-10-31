@@ -5,7 +5,7 @@ import copy
 import numpy as np
 import uuid
 
-def collate_fn(data):
+def collate_fn_antigo(data):
     imgs = []
     lbls = []
     for img, lbl in data:
@@ -13,6 +13,17 @@ def collate_fn(data):
         lbls.append(np.array(lbl, dtype=np.int64))    
     imgs = torch.from_numpy(np.stack(imgs, axis=0)) 
     lbls = torch.tensor(lbls, dtype=torch.int64)     
+    return imgs, lbls
+
+
+def collate_fn(data):
+    imgs = []
+    lbls = []
+    for img, lbl in data:
+        imgs.append(torch.tensor(np.array(img, dtype=np.float32)))  # Convert each image directly to a PyTorch tensor
+        lbls.append(torch.tensor(lbl, dtype=torch.int64))           # Convert labels to PyTorch tensor as well
+    imgs = torch.stack(imgs, dim=0)  # Stack tensors along a new dimension
+    lbls = torch.tensor(lbls, dtype=torch.int64)  # Convert list of labels to tensor
     return imgs, lbls
 
 class Dataset(Dataset):
