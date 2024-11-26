@@ -66,7 +66,7 @@ class Experiment(fl.client.NumPyClient):
         
         self.model.save()
         
-        return float(loss), len(self.dataset.dataloader()), {"accuracy": float(acc), "loss" : float(loss)}
+        return float(loss), len(self.dataset.dataloader(validation = True)), {"accuracy": float(acc), "loss" : float(loss)}
 
     def training_loop(self, data_loader):
         raise NotImplementedError("The training_loop method should be implemented!")
