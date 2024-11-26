@@ -12,6 +12,7 @@ import numpy as np
 from pathlib import Path
 import shutil
 import time
+import traceback
 
 from flwr.server.strategy.aggregate import weighted_loss_avg
 
@@ -215,6 +216,8 @@ def run_centralized(experiment, name_log = 'centralized.log', post_processing_fn
     except Exception as ex:
         update_experiment_status(backend, experiment_id, "error")  
         logger.log("Error during Centralized Training", details=str(ex), object="experiment_run", object_id=experiment_id )
+        logger.log("Stacktrace of Error during Centralized Training", details=traceback.format_exc(), object="experiment_run", object_id=experiment_id )
+        
     
     backend.write_experiment_results('./centralized.log', experiment_id)
 
@@ -318,6 +321,7 @@ def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_f
     except Exception as ex:
         update_experiment_status(backend, experiment_id, "error")  
         logger.log("Error while running Flower", details=str(ex), object="experiment_run", object_id=experiment_id )
+        logger.log("Stacktrace of Error while running Flower", details=traceback.format_exc(), object="experiment_run", object_id=experiment_id )
     
     backend.write_experiment_results('./flower.log', experiment_id)
 
