@@ -363,10 +363,10 @@ def check_and_install_requirements(path, logger, id):
     try:
         req_file = Path(path+"requirements.txt")
         if req_file.exists():
-            subprocess.check_call([sys.executable, "-m", "pip", "-r", req_file.resolve()])
-            logger.log("Installing requirements successful", detais=req_file.resolve(), object="filesystem_file", object_id=id )
+            subprocess.check_call([sys.executable, "-m", "pip", "-r", req_file.as_posix()])
+            logger.log("Installing requirements successful", detais=req_file.as_posix(), object="filesystem_file", object_id=id )
         else:
-            logger.log("No requirements.txt found", detais=req_file.resolve(), object="filesystem_file", object_id=id )
+            logger.log("No requirements.txt found", detais=req_file.as_posix(), object="filesystem_file", object_id=id )
 
     except Exception as e:
         logger.log("Error while installing requirements", details=str(e), object="filesystem_file", object_id=id )
