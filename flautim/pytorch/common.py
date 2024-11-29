@@ -3,16 +3,12 @@ from datetime import datetime
 import argparse
 from enum import Enum
 import flwr as fl
-import os
-import threading
-import schedule
-import logging
+import os, threading, schedule, logging
 from typing import List, Tuple, Dict
 import numpy as np
 from pathlib import Path
 import shutil
-import time
-import traceback
+import time, traceback, subprocess, sys
 
 from flwr.server.strategy.aggregate import weighted_loss_avg
 
@@ -167,7 +163,7 @@ def fit_config(server_round: int):
     }
     return config
 
-
+    
 def run_centralized(experiment, name_log = 'centralized.log', post_processing_fn = []):
 
     logging.basicConfig(filename=name_log,
@@ -189,7 +185,11 @@ def run_centralized(experiment, name_log = 'centralized.log', post_processing_fn
     path = ctx.path
     output_path = ctx.output_path
     epochs = ctx.epochs
-    
+
+    logger.log("Checking for requirements", details="", object="experiment_run", object_id=experiment_id )
+
+    check_and_install_requirements(path, logger, experiment_id)
+
     logger.log("Starting Centralized Training", details="", object="experiment_run", object_id=experiment_id )
 
     def schedule_file_logging():
@@ -279,6 +279,10 @@ def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_f
     output_path = ctx.output_path
     num_clients = ctx.clients
     num_rounds = ctx.rounds
+
+    logger.log("Checking for requirements", details="", object="experiment_run", object_id=experiment_id )
+
+    check_and_install_requirements(path, logger, experiment_id)
     
     logger.log("Starting Flower Engine", details="", object="experiment_run", object_id=experiment_id )
 
@@ -354,6 +358,18 @@ def update_experiment_status(backend, id, status):
     newvalues = { "$set": { 'status': status } }
     experiments = backend.get_db()['experimento']
     experiments.update_one(filter, newvalues)
+
+def check_and_install_requirements(path, logger, id):
+    try:
+        req_file = Path(path+"requirements.txt")
+        if req_file.exists():
+            subprocess.check_call([sys.executable, "-m", "pip", "-r", req_file.resolve()])
+            logger.log("Installing requirements successful", detais=req_file.resolve(), object="filesystem_file", object_id=id )
+        else:
+            logger.log("No requirements.txt found", detais=req_file.resolve(), object="filesystem_file", object_id=id )
+
+    except Exception as e:
+        logger.log("Error while installing requirements", details=str(e), object="filesystem_file", object_id=id )
 
 
 def copy_model_wights(path, output_path, id, logger):
