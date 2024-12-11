@@ -100,6 +100,7 @@ class metrics(Enum):
      
 
 class ExperimentStatus(str, Enum):
+    PENDING = "pending"
     RUNNING = "running"
     FINISHED = "finished"
     ABORTED = "aborted"
@@ -164,7 +165,7 @@ def fit_config(server_round: int):
     return config
 
     
-def run_centralized(experiment, name_log = 'centralized.log', post_processing_fn = []):
+def run_centralized(experiment, name_log = 'centralized.log', post_processing_fn = [], **kwargs):
 
     logging.basicConfig(filename=name_log,
                     filemode='w',  # 'a' para append, 'w' para sobrescrever
@@ -247,12 +248,12 @@ class CustomFedAvg(fl.server.strategy.FedAvg):
             eval_metrics = [(res.num_examples, res.metrics) for _, res in results]
             metrics_aggregated = self.evaluate_metrics_aggregation_fn(eval_metrics, server_round)
         elif server_round == 1:  # Only log this warning once
-            log(WARNING, "No evaluate_metrics_aggregation_fn provided")
+            logger.log("No evaluate_metrics_aggregation_fn provided")
             
         return loss_aggregated, metrics_aggregated
 
     
-def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_fn = []):
+def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_fn = [], **kwargs):
 
     logging.basicConfig(filename=name_log,
                     filemode='w',  # 'a' para append, 'w' para sobrescrever
@@ -273,8 +274,8 @@ def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_f
     experiment_id = ctx.IDexperiment
     path = ctx.path
     output_path = ctx.output_path
-    num_clients = ctx.clients
-    num_rounds = ctx.rounds
+    num_clients = kwargs.get("num_clients", ctx.clients)
+    num_rounds = kwargs.get("num_rounds", ctx.rounds)
     
     logger.log("Starting Flower Engine", details="", object="experiment_run", object_id=experiment_id )
 
