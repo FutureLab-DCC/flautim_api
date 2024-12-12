@@ -303,7 +303,10 @@ def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_f
 
         update_experiment_status(backend, experiment_id, "running")  
     
-        _ = fl.simulation.start_simulation(
+        client_resources = {"num_cpus": 1, "num_gpus": 0.25} # Cada cliente com 10% de gpu
+ 
+        h = fl.simulation.start_simulation(
+            client_resources=client_resources,
             client_fn=client_fn, 
             num_clients=num_clients, 
             config=fl.server.ServerConfig(num_rounds=num_rounds),  
