@@ -33,6 +33,9 @@ class Backend(object):
         self.db[collection].insert_one(msg)
             
         self.connection.close()
+
+    def close_db(self):
+        self.connection.close()
         
     def write_experiment_results(self, file_path, experiment):
         db = self.get_db()["experiment_results"]
@@ -128,6 +131,8 @@ class ExperimentContext(object):
         self.dataset = experiment["datasetId"]
 
         self.acronym = experiment["acronym"]
+        
+        backend.close_db()
 
     def status(self, stat: ExperimentStatus):
         filter = { '_id': self.id }
