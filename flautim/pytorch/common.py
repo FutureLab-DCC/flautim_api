@@ -136,10 +136,12 @@ class ExperimentContext(object):
 
 
 class Measures(object):
-    def __init__(self, context):
+    def __init__(self, backend, context):
         super().__init__()
         
         self.context = context
+    
+        self.backend = backend
         
     def log(self, experiment, metric, values, validation = False, **append):
         ts = str(datetime.now())
@@ -149,9 +151,7 @@ class Measures(object):
                 "epoch" : experiment.epoch_fl}
         data.update(append)
         
-        backend = Backend(server = self.context.dbserver, port = self.context.dbport, user = self.context.dbuser, password=self.context.dbpw)
-        
-        backend.write_db(data, collection = 'measures')
+        self.backend.write_db(data, collection = 'measures')
 
 def fit_config(server_round: int):
     """Return training configuration dict for each round.
@@ -344,7 +344,7 @@ def get_argparser():
     backend = Backend(server = ctx.dbserver, port = ctx.dbport, user = ctx.dbuser, password=ctx.dbpw)
     
     logger = Logger(backend, ctx)
-    measures = Measures(ctx)
+    measures = Measures(backend, ctx)
     
     return parser, ctx, backend, logger, measures
 
