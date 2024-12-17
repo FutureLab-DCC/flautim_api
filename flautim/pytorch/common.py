@@ -20,6 +20,11 @@ class Backend(object):
         self._user = kwargs.get('user', None)
         self._pw = kwargs.get('password', None)
         self._db = kwargs.get('authentication', 'admin')
+        self._db_name = kwargs.get("db_name", "flautim")
+
+    @property
+    def connection_string(self):
+        return f"mongodb://{self._user}:{self._pw}@{self._server}:{self._port}"
         
     def get_db(self):
         self.connection = pymongo.MongoClient("mongodb://{}:{}@{}:{}".format(self._user, self._pw, self._server, self._port))
@@ -27,34 +32,28 @@ class Backend(object):
         return self.db
         
     def write_db(self, msg, collection):
-        self.connection = pymongo.MongoClient("mongodb://{}:{}@{}:{}".format(self._user, self._pw, self._server, self._port))
-        self.db = self.connection["flautim"]
-            
-        self.db[collection].insert_one(msg)
-            
-        self.connection.close()
+        with pymongo.MongoClient(self.connection_string) as client:
+            db = client[self._db_name]
+            db[collection].insert_one(msg)
 
     def close_db(self):
         self.connection.close()
         
     def write_experiment_results(self, file_path, experiment):
-        db = self.get_db()["experiment_results"]
+        with pymongo.MongoClient(self.connection_string) as client:
+            db = client[self._db_name]
+            collection = db["experiment_results"]
+            filter_query = {"Experiment": experiment}
 
-        filter = {"Experiment" : experiment}
+            # Read file content
+            with open(file_path, "r") as file:
+                content = file.read()
 
-        cursor = db.find(filter)
-
-        with open(file_path, 'r') as file:
-            content = file.read()
-
-        doc = next(cursor, None)
-
-        if doc is None:
-            registro = {"Experiment": experiment, "content": content}
-            db.insert_one(registro)
-        else:
-            newvalues = { "$set": { "content": content } }
-            db.update_one(filter, newvalues)
+            # Check if document exists, update or insert
+            if collection.find_one(filter_query) is None:
+                collection.insert_one({"Experiment": experiment, "content": content})
+            else:
+                collection.update_one(filter_query, {"$set": {"content": content}})
 
     
     def write_experiment_results_callback(self, file_path, experiment):
@@ -109,6 +108,24 @@ class ExperimentStatus(str, Enum):
     ABORTED = "aborted"
     ERROR = "error"
 
+def get_experiment_variables(context, experiment_id):
+    backend = Backend(
+        server=context.dbserver,
+        port=context.dbport,
+        user=context.dbuser,
+        password=context.dbpw
+    )
+    # Use context manager to avoid leaks
+    with pymongo.MongoClient(backend.connection_string) as client:
+        db = client["flautim"]
+        experiments = db["experimento"]
+        experiment = experiments.find_one({"_id": experiment_id})
+       
+        return {"projectId": experiment["projectId"],
+                "modelId": experiment["modelId"],
+                "datasetId": experiment["datasetId"],
+                "acronym": experiment["acronym"]}
+
 
 class ExperimentContext(object):
     def __init__(self, context, no_db=False):
@@ -118,21 +135,13 @@ class ExperimentContext(object):
 
         self.id = self.context.IDexperiment
 
-        backend = Backend(server = self.context.dbserver, port = self.context.dbport, user = self.context.dbuser, password=self.context.dbpw)
+        variables = get_experiment_variables(self.context, self.id)
 
-        self.experiments = backend.get_db()['experimento']
-        
-        experiment = self.experiments.find({"_id": self.id}).next()
-
-        self.project = experiment["projectId"]
-
-        self.model = experiment["modelId"]
-
-        self.dataset = experiment["datasetId"]
-
-        self.acronym = experiment["acronym"]
-        
-        backend.close_db()
+        # Assign fetched variables to class attributes
+        self.project = variables["projectId"]
+        self.model = variables["modelId"]
+        self.dataset = variables["datasetId"]
+        self.acronym = variables["acronym"]
 
     def status(self, stat: ExperimentStatus):
         filter = { '_id': self.id }
