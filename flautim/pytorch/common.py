@@ -20,6 +20,7 @@ class Backend(object):
         self._user = kwargs.get('user', None)
         self._pw = kwargs.get('password', None)
         self._db = kwargs.get('authentication', 'admin')
+        self._db_name = kwargs.get("db_name", "flautim")
 
     @property
     def connection_string(self):
@@ -31,34 +32,28 @@ class Backend(object):
         return self.db
         
     def write_db(self, msg, collection):
-        self.connection = pymongo.MongoClient("mongodb://{}:{}@{}:{}".format(self._user, self._pw, self._server, self._port))
-        self.db = self.connection["flautim"]
-            
-        self.db[collection].insert_one(msg)
-            
-        self.connection.close()
+        with pymongo.MongoClient(self.connection_string) as client:
+            db = client[self._db_name]
+            db[collection].insert_one(msg)
 
     def close_db(self):
         self.connection.close()
         
     def write_experiment_results(self, file_path, experiment):
-        db = self.get_db()["experiment_results"]
+        with pymongo.MongoClient(self.connection_string) as client:
+            db = client[self._db_name]
+            collection = db["experiment_results"]
+            filter_query = {"Experiment": experiment}
 
-        filter = {"Experiment" : experiment}
+            # Read file content
+            with open(file_path, "r") as file:
+                content = file.read()
 
-        cursor = db.find(filter)
-
-        with open(file_path, 'r') as file:
-            content = file.read()
-
-        doc = next(cursor, None)
-
-        if doc is None:
-            registro = {"Experiment": experiment, "content": content}
-            db.insert_one(registro)
-        else:
-            newvalues = { "$set": { "content": content } }
-            db.update_one(filter, newvalues)
+            # Check if document exists, update or insert
+            if collection.find_one(filter_query) is None:
+                collection.insert_one({"Experiment": experiment, "content": content})
+            else:
+                collection.update_one(filter_query, {"$set": {"content": content}})
 
     
     def write_experiment_results_callback(self, file_path, experiment):
