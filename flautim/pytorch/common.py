@@ -298,8 +298,8 @@ def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_f
     try:
 
         strategy = CustomFedAvg(
-            fraction_fit=0.1,  
-            fraction_evaluate=0.1,  
+            fraction_fit=1.,  
+            fraction_evaluate=1.,  
             min_available_clients=num_clients,  
             evaluate_fn=eval_fn,
             on_fit_config_fn=fit_config,
