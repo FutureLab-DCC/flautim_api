@@ -157,12 +157,12 @@ class Measures(object):
     
         self.backend = backend
         
-    def log(self, experiment, metric, values, validation = False, **append):
+    def log(self, experiment, metric, values, validation = False, epoch = None, **append):
         ts = str(datetime.now())
         data = { "Experiment": self.context.IDexperiment, "user": experiment.model.suffix, "timestamp": ts,
                  "metric" : str(metric), "model" : experiment.model.uid, "dataset": experiment.dataset.name, 
                 "values": values, "validation": validation,
-                "epoch" : experiment.epoch_fl}
+                "epoch" : experiment.epoch_fl if epoch is None else epoch }
         data.update(append)
         
         self.backend.write_db(data, collection = 'measures')
