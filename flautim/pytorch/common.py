@@ -109,6 +109,34 @@ class ExperimentStatus(str, Enum):
     ABORTED = "aborted"
     ERROR = "error"
 
+def get_experiment_variables(context, experiment_id):
+    # Initialize the backend with connection details
+    backend = Backend(
+        server=context.dbserver,
+        port=context.dbport,
+        user=context.dbuser,
+        password=context.dbpw
+    )
+    
+    try:
+        # Open the database and access the "experimento" collection
+        experiments = backend.get_db()['experimento']
+        
+        # Fetch the experiment document
+        experiment = experiments.find({"_id": experiment_id}).next()
+        
+        # Extract required variables
+        variables = {
+            "projectId": experiment["projectId"],
+            "modelId": experiment["modelId"],
+            "datasetId": experiment["datasetId"],
+            "acronym": experiment["acronym"]
+        }
+        return variables
+    finally:
+        # Close the database connection
+        backend.close_db()
+
 
 class ExperimentContext(object):
     def __init__(self, context, no_db=False):
@@ -118,21 +146,13 @@ class ExperimentContext(object):
 
         self.id = self.context.IDexperiment
 
-        backend = Backend(server = self.context.dbserver, port = self.context.dbport, user = self.context.dbuser, password=self.context.dbpw)
+        variables = get_experiment_variables(self.context, self.id)
 
-        self.experiments = backend.get_db()['experimento']
-        
-        experiment = self.experiments.find({"_id": self.id}).next()
-
-        self.project = experiment["projectId"]
-
-        self.model = experiment["modelId"]
-
-        self.dataset = experiment["datasetId"]
-
-        self.acronym = experiment["acronym"]
-        
-        backend.close_db()
+        # Assign fetched variables to class attributes
+        self.project = variables["projectId"]
+        self.model = variables["modelId"]
+        self.dataset = variables["datasetId"]
+        self.acronym = variables["acronym"]
 
     def status(self, stat: ExperimentStatus):
         filter = { '_id': self.id }
