@@ -20,6 +20,10 @@ class Backend(object):
         self._user = kwargs.get('user', None)
         self._pw = kwargs.get('password', None)
         self._db = kwargs.get('authentication', 'admin')
+
+    @property
+    def connection_string(self):
+        return f"mongodb://{self._user}:{self._pw}@{self._server}:{self._port}"
         
     def get_db(self):
         self.connection = pymongo.MongoClient("mongodb://{}:{}@{}:{}".format(self._user, self._pw, self._server, self._port))
@@ -110,32 +114,22 @@ class ExperimentStatus(str, Enum):
     ERROR = "error"
 
 def get_experiment_variables(context, experiment_id):
-    # Initialize the backend with connection details
     backend = Backend(
         server=context.dbserver,
         port=context.dbport,
         user=context.dbuser,
         password=context.dbpw
     )
-    
-    try:
-        # Open the database and access the "experimento" collection
-        experiments = backend.get_db()['experimento']
-        
-        # Fetch the experiment document
-        experiment = experiments.find({"_id": experiment_id}).next()
-        
-        # Extract required variables
-        variables = {
-            "projectId": experiment["projectId"],
-            "modelId": experiment["modelId"],
-            "datasetId": experiment["datasetId"],
-            "acronym": experiment["acronym"]
-        }
-        return variables
-    finally:
-        # Close the database connection
-        backend.close_db()
+    # Use context manager to avoid leaks
+    with pymongo.MongoClient(backend.connection_string) as client:
+        db = client["flautim"]
+        experiments = db["experimento"]
+        experiment = experiments.find_one({"_id": experiment_id})
+       
+        return {"projectId": experiment["projectId"],
+                "modelId": experiment["modelId"],
+                "datasetId": experiment["datasetId"],
+                "acronym": experiment["acronym"]}
 
 
 class ExperimentContext(object):
