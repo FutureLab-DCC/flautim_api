@@ -304,11 +304,14 @@ def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_f
     thread_schedulling.daemon = True
     thread_schedulling.start()
 
+    fraction_fit = kwargs.get('fraction_fit', 1.)
+    fraction_evaluate  = kwargs.get('fraction_evaluate', 1.)
+
     try:
 
         strategy = CustomFedAvg(
-            fraction_fit=1.,  
-            fraction_evaluate=1.,  
+            fraction_fit=fraction_fit,  
+            fraction_evaluate=fraction_evaluate,  
             min_available_clients=num_clients,  
             evaluate_fn=eval_fn,
             on_fit_config_fn=fit_config,
