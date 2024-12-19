@@ -27,11 +27,11 @@ def collate_fn(data, xdtype=torch.float32, ydtype=torch.int64):
     return imgs, lbls
 
 class Dataset(Dataset):
-    def __init__(self, name, train_split = .8, **kwargs) -> None:
+    def __init__(self, name, **kwargs) -> None:
         super(Dataset, self).__init__()
         self.id = kwargs.get("id",str(uuid.uuid1()))
         self.name = name
-        self.train_split = train_split
+        self.train_split = kwargs.get('train_split',.8)
         self.batch_size = kwargs.get("batch_size", 128)
         self.shuffle = kwargs.get("shuffle", True)
         self.num_workers = kwargs.get("num_workers", 1)
