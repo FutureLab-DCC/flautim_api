@@ -63,14 +63,10 @@ class Experiment(fl.client.NumPyClient):
         self.logger.log("Model evaluation started", details="", object="experiment_evaluate", object_id=self.id )
         
         self.model.set_parameters(parameters)
-
-        self.epoch_fl = config["server_round"]
         
         loss, acc = self.validation_loop(self.dataset.dataloader(validation = True))
 
         self.logger.log("Model training finished", details="", object="experiment_evaluate", object_id=self.id )
-
-        self.measures.log(self, metrics.MSE, loss, epoch = self.epoch_fl, validation=True)
         
         self.model.save()
         
