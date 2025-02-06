@@ -52,7 +52,7 @@ class Experiment(fl.client.NumPyClient):
 
         self.logger.log("Model training finished", details="", object="experiment_fit", object_id=self.id )
 
-        self.measures.log(self, metrics.MSE, loss, validation=False)
+        self.measures.log(self, metrics.MSE, loss, epoch = self.epoch_fl, validation=False)
 
         self.model.save()
 
@@ -68,7 +68,7 @@ class Experiment(fl.client.NumPyClient):
 
         self.logger.log("Model training finished", details="", object="experiment_evaluate", object_id=self.id )
 
-        self.measures.log(self, metrics.MSE, loss, validation=True)
+        self.measures.log(self, metrics.MSE, loss, epoch = self.epoch_fl, validation=True)
         
         self.model.save()
         
