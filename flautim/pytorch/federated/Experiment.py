@@ -67,6 +67,8 @@ class Experiment(fl.client.NumPyClient):
         loss, acc = self.validation_loop(self.dataset.dataloader(validation = True))
 
         self.logger.log("Model training finished", details="", object="experiment_evaluate", object_id=self.id )
+
+        self.measures.log(self, metrics.MSE, loss, validation=True)
         
         self.model.save()
         
