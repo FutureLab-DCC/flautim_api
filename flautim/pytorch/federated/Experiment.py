@@ -63,6 +63,8 @@ class Experiment(fl.client.NumPyClient):
         self.logger.log("Model evaluation started", details="", object="experiment_evaluate", object_id=self.id )
         
         self.model.set_parameters(parameters)
+
+        self.epoch_fl = config["server_round"]
         
         loss, acc = self.validation_loop(self.dataset.dataloader(validation = True))
 
