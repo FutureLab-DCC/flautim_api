@@ -7,6 +7,8 @@ import flwr as fl
 from flautim.pytorch import Model
 from flautim.pytorch.common import ExperimentContext, ExperimentStatus
 
+from flautim.pytorch.common import metrics
+
 class Experiment(fl.client.NumPyClient):
     def __init__(self, model : Model, dataset : Dataset, measures, logger, context, **kwargs) -> None:
         super().__init__()
@@ -49,6 +51,8 @@ class Experiment(fl.client.NumPyClient):
         loss, acc = self.training_loop(self.dataset.dataloader())
 
         self.logger.log("Model training finished", details="", object="experiment_fit", object_id=self.id )
+
+        self.measures.log(self, metrics.MSE, loss, validation=False)
 
         self.model.save()
 
