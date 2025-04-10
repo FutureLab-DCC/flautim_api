@@ -9,9 +9,10 @@ def init():
 
     print("Flautim inicializado!")
 
-    with open("config.yaml", "r") as file:
+    with open("config.csv", "r") as file:
 
         _ctx = yaml.safe_load(file)
+    
 
     backend = Backend(server = _ctx.host, port = _ctx.port, user = _ctx.username, password= _ctx.password)
     return _ctx
