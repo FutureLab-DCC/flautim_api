@@ -58,3 +58,7 @@ class Experiment(object):
 
     def training_loop(self, data_loader):
         raise NotImplementedError("The training_loop method should be implemented!")
+
+
+class Model(object):
+    
