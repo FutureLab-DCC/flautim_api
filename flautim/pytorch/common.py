@@ -342,28 +342,35 @@ def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_f
     
     backend.write_experiment_results('./flower.log', experiment_id)
 
-def get_argparser():
-    parser = argparse.ArgumentParser()
-    
-    parser.add_argument("--user", type=str, required=True)
-    parser.add_argument("--path", type=str, required=True)
-    parser.add_argument("--output-path", type=str, required=True)
-    parser.add_argument("--dbserver", type=str, required=False, default="127.0.0.1")
-    parser.add_argument("--dbport", type=str, required=False, default="27017")
-    parser.add_argument("--dbuser", type=str, required=True)
-    parser.add_argument("--dbpw", type=str, required=True)
-    parser.add_argument("--clients", type=int, required=False, default=3)
-    parser.add_argument("--rounds", type=int, required=False, default=10)
-    parser.add_argument("--epochs", type=int, required=False, default=10)
-    parser.add_argument("--IDexperiment", type=str, required=True, default=0)
-    ctx = parser.parse_args()
-    
-    backend = Backend(server = ctx.dbserver, port = ctx.dbport, user = ctx.dbuser, password=ctx.dbpw)
-    
-    logger = Logger(backend, ctx)
-    measures = Measures(backend, ctx)
-    
-    return parser, ctx, backend, logger, measures
+class teste:
+    def get_argparser():
+        parser = argparse.ArgumentParser()
+        
+        parser.add_argument("--user", type=str, required=True)
+        parser.add_argument("--path", type=str, required=True)
+        parser.add_argument("--output-path", type=str, required=True)
+        parser.add_argument("--dbserver", type=str, required=False, default="127.0.0.1")
+        parser.add_argument("--dbport", type=str, required=False, default="27017")
+        parser.add_argument("--dbuser", type=str, required=True)
+        parser.add_argument("--dbpw", type=str, required=True)
+        parser.add_argument("--clients", type=int, required=False, default=3)
+        parser.add_argument("--rounds", type=int, required=False, default=10)
+        parser.add_argument("--epochs", type=int, required=False, default=10)
+        parser.add_argument("--IDexperiment", type=str, required=True, default=0)
+        ctx = parser.parse_args()
+        
+        backend = Backend(server = ctx.dbserver, port = ctx.dbport, user = ctx.dbuser, password=ctx.dbpw)
+            
+        return ctx, backend
+
+    def log(ctx, backend):
+        logger = Logger(backend, ctx)
+        return logger
+
+
+    def measures(ctx, backend):
+        measures = Measures(backend, ctx)
+        return measures
 
 
 def update_experiment_status(backend, id, status):
