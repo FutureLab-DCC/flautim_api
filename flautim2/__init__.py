@@ -12,7 +12,7 @@ def init():
     logger = Logger(backend, context)
     logger.log("Olá! Esta é a função init!", details="", object="init", object_id=context.IDexperiment)
    
-    return _ctx
+    return parser, context, backend, logger, measures
 
 
 def log():
