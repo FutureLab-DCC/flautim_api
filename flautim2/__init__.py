@@ -9,13 +9,8 @@ def init():
 
     parser, context, backend, logger, measures = get_argparser()
 
-    with open("config.csv", "r") as file:
-        _ctx = yaml.safe_load(file)
-
-    _ctx['experiment']['id'] = context.IDexperiment
-    print(_ctx)
-
-    backend = Backend(server = _ctx['mongodb']['host'], port = _ctx['mongodb']['port'], user = _ctx['mongodb']['username'], password= _ctx._ctx['mongodb']['password'])
+    logger = Logger(backend, context)
+    logger.log("Olá! Esta é a função init!", details="", object="init", object_id=context.IDexperiment)
    
     return _ctx
 
