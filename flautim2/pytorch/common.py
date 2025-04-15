@@ -65,19 +65,37 @@ class Backend(object):
 
 
 class Logger(object):
-    def __init__(self, backend, context):
+    def __init__(self, backend, user):
         super().__init__()
         
         self.backend = backend
         
-        self.context = context
+        self.user = user
         
     def log(self, msg : str, **append):
         ts = str(datetime.now())
-        data = { "user": self.context.user, "timestamp": ts, "message" : msg }
+        data = { "user": self.user, "timestamp": ts, "message" : msg }
         if append is not None:
                 data.update(append)
         self.backend.write_db(data, collection = 'logs')
+
+class Measures(object):
+    def __init__(self, backend, IDexperiment):
+        super().__init__()
+        
+        self.IDexperiment = IDexperiment
+    
+        self.backend = backend
+        
+    def log(self, experiment, metric, values, validation = False, epoch = None, **append):
+        ts = str(datetime.now())
+        data = { "Experiment": self.IDexperiment, "user": experiment.model.suffix, "timestamp": ts,
+                 "metric" : str(metric), "model" : experiment.model.uid, "dataset": experiment.dataset.name, 
+                "values": values, "validation": validation,
+                "epoch" : experiment.epoch_fl if epoch is None else epoch }
+        data.update(append)
+        
+        self.backend.write_db(data, collection = 'measures')
 
 
 class metrics(Enum):
@@ -148,24 +166,6 @@ class ExperimentContext(object):
         newvalues = { "$set": { 'status': str(stat) } }
         self.experiments.update_one(filter, newvalues)
 
-
-class Measures(object):
-    def __init__(self, backend, context):
-        super().__init__()
-        
-        self.context = context
-    
-        self.backend = backend
-        
-    def log(self, experiment, metric, values, validation = False, epoch = None, **append):
-        ts = str(datetime.now())
-        data = { "Experiment": self.context.IDexperiment, "user": experiment.model.suffix, "timestamp": ts,
-                 "metric" : str(metric), "model" : experiment.model.uid, "dataset": experiment.dataset.name, 
-                "values": values, "validation": validation,
-                "epoch" : experiment.epoch_fl if epoch is None else epoch }
-        data.update(append)
-        
-        self.backend.write_db(data, collection = 'measures')
 
 def fit_config(server_round: int):
     """Return training configuration dict for each round.
