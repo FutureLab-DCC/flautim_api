@@ -39,7 +39,7 @@ def init():
         'IDexperiment': ctx.IDexperiment
     }
     
-    backend = Backend(server = file.dbserver, port = file.dbport, user = file.dbuser, password = file.dbpw)
+    backend = Backend(server = file['dbserver'], port = file['dbport'], user = file['dbuser'], password = file['dbpw'])
 
     log("Olá! Esta é a função init!", {
         'backend': backend,
