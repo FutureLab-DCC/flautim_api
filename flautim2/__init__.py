@@ -2,19 +2,12 @@ from flautim2.pytorch.common import Backend, Logger, Measures, get_argparser
 import pandas as pd
 import yaml
 
-_ctx = None
-_backend = None
-_logger = None
-_measures = None
+
 
 def init():
 
     parser, context, backend, logger, measures = get_argparser()
 
-    _logger = logger
-    _backend = backend
-    _measures = measures
-    _ctx = context
 
     logger.log("Olá! Esta é a função init!", details="", object="init", object_id=context.IDexperiment)
 
@@ -30,15 +23,22 @@ def init():
     # _logger = logger(_backend, _ctx)
     # _measures = Measures(_backend, _ctx)
 
-    return parser, context, backend, logger, measures
+    ctx = {
+        'backend': backend,
+        'context': context,
+        'logger': logger,
+        'measures': measures
+    }
 
-def log(message):
+    return ctx
 
-    _logger.log(message, details="", object="init", object_id=_ctx.IDexperiment)
+def log(message, ctx):
+    
+    ctx['logger'].log(message, details="", object="init", object_id=ctx['context'].IDexperiment)
 
     
     
 
-def measures(experiment, metric, values, validation = False):
+def measures(experiment, metric, values, validation, ctx):
     
-    _measures.log(experiment, metric, values, validation = False)
+    ctx['measures'].log(experiment, metric, values, validation = False)
