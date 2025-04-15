@@ -1,7 +1,6 @@
 import pymongo
 from datetime import datetime
 import argparse
-import flautim2 as flt
 from enum import Enum
 import flwr as fl
 import os, threading, schedule, logging
@@ -151,8 +150,6 @@ class ExperimentContext(object):
         super().__init__()
         
         self.context = context
-
-        flt.log(f"Context: {self.context}", self.context['context'])
 
         self.id = self.context['context']['IDexperiment']
 
