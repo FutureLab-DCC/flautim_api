@@ -49,3 +49,4 @@ class Model(nn.Module):
             file = self.file
         if os.path.exists(file):
             self.load_state_dict(torch.load(file))
+
