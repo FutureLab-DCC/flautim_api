@@ -151,9 +151,9 @@ class ExperimentContext(object):
         
         self.context = context
 
-        self.id = self.context['IDexperiment']
+        self.id = self.context['context']['IDexperiment']
 
-        variables = get_experiment_variables(self.context, self.id)
+        variables = get_experiment_variables(self.context['context'], self.id)
 
         # Assign fetched variables to class attributes
         self.project = variables["projectId"]
