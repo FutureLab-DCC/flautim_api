@@ -14,8 +14,7 @@ class Experiment(object):
         self.model = model
         self.dataset = dataset
         self.backend = context['backend']
-        self.logger = context['logger']
-
+        
         self.context = ExperimentContext(context)
 
         # self.model.id = self.context.model
@@ -102,6 +101,8 @@ class Experiment(object):
         thread_schedulling.daemon = True
         thread_schedulling.start()
 
+        
+
         fl.log(f"Ola, estamos no schedule_file_logging!", self.context.context)
 
         try:
@@ -111,9 +112,11 @@ class Experiment(object):
 
             self.fit()
         
-            update_experiment_status(self.backend, self.id, "finished") 
+            update_experiment_status(self.backend, self.id, "finished")
 
-            copy_model_wights(self.context.context['path'], self.context.context['output_path'], self.id, self.logger) 
+            logger = Logger(self.context['backend'], self.context['context']['user'])
+
+            copy_model_wights(self.context.context['path'], self.context.context['output_path'], self.id, logger) 
 
             fl.log(f"Finishing Centralized Training", context=self.context.context)
 
@@ -121,6 +124,10 @@ class Experiment(object):
             update_experiment_status(self.backend, self.id, "error")  
             fl.log(f"Error during Centralized Training: {str(ex)}", self.context.context)
             fl.log(f"Stacktrace of Error during Centralized Training: {traceback.format_exc()}", self.context.context)
+            
+        
+        self.backend.write_experiment_results('./centralized.log', self.id)
+
             
         
         self.backend.write_experiment_results('./centralized.log', self.id)
