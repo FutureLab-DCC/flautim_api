@@ -15,7 +15,7 @@ class Experiment(object):
         self.dataset = dataset
         self.backend = context['backend']
 
-        self.context = ExperimentContext(context['context'])
+        self.context = ExperimentContext(context)
 
         # self.model.id = self.context.model
         # self.dataset.id = self.context.dataset
