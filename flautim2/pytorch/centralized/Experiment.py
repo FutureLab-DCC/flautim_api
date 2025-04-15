@@ -14,6 +14,7 @@ class Experiment(object):
         self.model = model
         self.dataset = dataset
         self.backend = context['backend']
+        self.logger = context['logger']
 
         self.context = ExperimentContext(context)
 
@@ -40,7 +41,7 @@ class Experiment(object):
         return self.model.get_parameters()
         
     def fit(self, **kwargs):
-        fl.log("Model training started", context=self.context)
+        fl.log("Model training started", self.context.context)
 
         for epochs in range(1, self.epochs+1):
             start_time = time.time()
@@ -56,16 +57,15 @@ class Experiment(object):
             #self.measures.log(self, metrics.CROSSENTROPY, epoch_loss, validation=False)
             #self.measures.log(self, metrics.ACCURACY, acc, validation=False)
 
-        fl.log("Model training finished", context=self.context)
+        fl.log("Model training finished", self.context.context)
 
         self.model.save()
 
     def training_loop(self, data_loader):
         raise NotImplementedError("The training_loop method should be implemented!")
     
+    
     def run(self, metrics, name_log = 'centralized.log', post_processing_fn = [], **kwargs):
-
-        
 
         logging.basicConfig(filename=name_log,
                         filemode='w',  # 'a' para append, 'w' para sobrescrever
@@ -107,6 +107,8 @@ class Experiment(object):
         try:
             update_experiment_status(self.backend, self.id, "running")  
 
+            fl.log(f"Ola, estamos no update_experiment_status!", self.context.context)
+
             self.fit()
         
             update_experiment_status(self.backend, self.id, "finished") 
@@ -114,10 +116,12 @@ class Experiment(object):
             copy_model_wights(self.context.context['path'], self.context.context['output_path'], self.id, self.logger) 
 
             fl.log(f"Finishing Centralized Training", context=self.context.context)
+
         except Exception as ex:
             update_experiment_status(self.backend, self.id, "error")  
-            fl.log(f"Error during Centralized Training: {str(ex)}", context=self.context.context)
-            fl.log(f"Stacktrace of Error during Centralized Training: {traceback.format_exc()}", context=self.context.context)
+            fl.log(f"Error during Centralized Training: {str(ex)}", self.context.context)
+            fl.log(f"Stacktrace of Error during Centralized Training: {traceback.format_exc()}", self.context.context)
             
         
         self.backend.write_experiment_results('./centralized.log', self.id)
+
