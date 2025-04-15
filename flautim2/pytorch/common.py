@@ -74,7 +74,7 @@ class Logger(object):
         
     def log(self, msg : str, **append):
         ts = str(datetime.now())
-        data = { "user": self.context.user, "timestamp": ts, "message" : msg }
+        data = { "user": self.context['db']['username'], "timestamp": ts, "message" : msg }
         if append is not None:
                 data.update(append)
         self.backend.write_db(data, collection = 'logs')
@@ -159,7 +159,7 @@ class Measures(object):
         
     def log(self, experiment, metric, values, validation = False, epoch = None, **append):
         ts = str(datetime.now())
-        data = { "Experiment": self.context.IDexperiment, "user": experiment.model.suffix, "timestamp": ts,
+        data = { "Experiment": self.context['experiment']['id'], "user": experiment.model.suffix, "timestamp": ts,
                  "metric" : str(metric), "model" : experiment.model.uid, "dataset": experiment.dataset.name, 
                 "values": values, "validation": validation,
                 "epoch" : experiment.epoch_fl if epoch is None else epoch }
