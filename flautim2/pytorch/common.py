@@ -1,6 +1,7 @@
 import pymongo
 from datetime import datetime
 import argparse
+import flautim2 as flt
 from enum import Enum
 import flwr as fl
 import os, threading, schedule, logging
@@ -151,6 +152,8 @@ class ExperimentContext(object):
         
         self.context = context
 
+        flt.log(f"Context: {self.context}", self.context['context'])
+
         self.id = self.context['context']['IDexperiment']
 
         variables = get_experiment_variables(self.context['context'], self.id)
@@ -165,6 +168,7 @@ class ExperimentContext(object):
         filter = { '_id': self.id }
         newvalues = { "$set": { 'status': str(stat) } }
         self.experiments.update_one(filter, newvalues)
+
 
 
 def fit_config(server_round: int):
