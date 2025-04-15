@@ -41,7 +41,7 @@ def init():
     
     backend = Backend(server = file['dbserver'], port = file['dbport'], user = file['dbuser'], password = file['dbpw'])
 
-    log("Olá! Esta é a função init!", {
+    log(f"file: {file}", {
         'backend': backend,
         'context': file
     })
