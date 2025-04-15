@@ -4,7 +4,7 @@ from enum import Enum
 import os, threading, schedule, logging
 import flautim2 as fl
 from flautim2.pytorch import Model
-from flautim2.pytorch.common import ExperimentContext, ExperimentStatus, metrics
+from flautim2.pytorch.common import ExperimentContext, ExperimentStatus, metrics, update_experiment_status, copy_model_wights
 import time
 
 class Experiment(object):
