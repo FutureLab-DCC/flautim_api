@@ -17,9 +17,9 @@ def init(parser, context, backend, logger, measures):
     _ctx['experiment']['id'] = context.IDexperiment
     print(_ctx)
 
-    _backend = Backend(server = _ctx['db']['host'], port = _ctx['db']['port'], user = _ctx['db']['username'], password= _ctx['db']['password'])
-    _logger = logger(_backend, _ctx)
-    _measures = Measures(_backend, _ctx)
+    # _backend = Backend(server = _ctx['db']['host'], port = _ctx['db']['port'], user = _ctx['db']['username'], password= _ctx['db']['password'])
+    # _logger = logger(_backend, _ctx)
+    # _measures = Measures(_backend, _ctx)
 
 def log(message):
     print("log!")
