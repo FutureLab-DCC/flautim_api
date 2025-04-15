@@ -43,15 +43,13 @@ def init():
 
     log("Olá! Esta é a função init!", {
         'backend': backend,
-        'context': file,
-        'measures': measures
+        'context': file
     })
 
 
     return {
         'backend': backend,
-        'context': file,
-        'measures': measures
+        'context': file
     }
 
 def log(message, ctx):
