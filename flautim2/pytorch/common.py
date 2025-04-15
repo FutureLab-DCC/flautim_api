@@ -128,10 +128,10 @@ class ExperimentStatus(str, Enum):
 
 def get_experiment_variables(context, experiment_id):
     backend = Backend(
-        server=context.dbserver,
-        port=context.dbport,
-        user=context.dbuser,
-        password=context.dbpw
+        server=context['dbserver'],
+        port=context['dbport'],
+        user=context['dbuser'],
+        password=context['dbpw']
     )
     # Use context manager to avoid leaks
     with pymongo.MongoClient(backend.connection_string) as client:
