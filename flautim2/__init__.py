@@ -11,7 +11,7 @@ def init(parser, context, backend, logger, measures):
 
     logger.log("Olá! Esta é a função init!", details="", object="init", object_id=context.IDexperiment)
 
-    with open("config.csv", "r") as file:
+    with open("/data/config.csv", "r") as file:
         _ctx = yaml.safe_load(file)
 
     _ctx['experiment']['id'] = context.IDexperiment
