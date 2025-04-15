@@ -65,6 +65,8 @@ class Experiment(object):
     
     def run(self, metrics, name_log = 'centralized.log', post_processing_fn = [], **kwargs):
 
+        
+
         logging.basicConfig(filename=name_log,
                         filemode='w',  # 'a' para append, 'w' para sobrescrever
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -111,11 +113,11 @@ class Experiment(object):
 
             copy_model_wights(self.context.context['path'], self.context.context['output_path'], self.id, self.logger) 
 
-            fl.log("Finishing Centralized Training", context=self.context.context)
+            fl.log(f"Finishing Centralized Training", context=self.context.context)
         except Exception as ex:
             update_experiment_status(self.backend, self.id, "error")  
             fl.log(f"Error during Centralized Training: {str(ex)}", context=self.context.context)
-            fl.log("Stacktrace of Error during Centralized Training: {traceback.format_exc()}", context=self.context.context)
+            fl.log(f"Stacktrace of Error during Centralized Training: {traceback.format_exc()}", context=self.context.context)
             
         
         self.backend.write_experiment_results('./centralized.log', self.id)
