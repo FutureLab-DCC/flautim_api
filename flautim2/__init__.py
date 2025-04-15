@@ -7,29 +7,38 @@ _backend = None
 _logger = None
 _measures = None
 
-def init(parser, context, backend, logger, measures):
+def init():
+
+    parser, context, backend, logger, measures = get_argparser()
+
+    _logger = logger
+    _backend = backend
+    _measures = measures
+    _ctx = context
 
     logger.log("Olá! Esta é a função init!", details="", object="init", object_id=context.IDexperiment)
 
-    with open("/config.csv", "r") as file:
-        _ctx = yaml.safe_load(file)
+    # with open("config.csv", "r") as file:
+    #     _ctx = yaml.safe_load(file)
 
     #_ctx['experiment']['id'] = context.IDexperiment
 
-    logger.log(f"ID: {_ctx['experiment']['id']}", details="", object="init", object_id=context.IDexperiment)
+    # logger.log(f"ID: {_ctx['experiment']['id']}", details="", object="init", object_id=context.IDexperiment)
 
 
     # _backend = Backend(server = _ctx['db']['host'], port = _ctx['db']['port'], user = _ctx['db']['username'], password= _ctx['db']['password'])
     # _logger = logger(_backend, _ctx)
     # _measures = Measures(_backend, _ctx)
 
-def log(message):
-    print("log!")
+    return parser, context, backend, logger, measures
 
-    #_logger.log(message, details="", object="init", object_id=_ctx['experiment']['id'])
+def log(message):
+
+    _logger.log(message, details="", object="init", object_id=_ctx.IDexperiment)
 
     
     
 
 def measures(experiment, metric, values, validation = False):
-    print("measures!")
+    
+    _measures.log(experiment, metric, values, validation = False)
