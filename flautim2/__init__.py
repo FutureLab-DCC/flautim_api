@@ -54,7 +54,10 @@ def init():
 
 def log(message, ctx):
     logger = Logger(ctx['backend'], ctx['context']['user'])
-    logger.log(message, details="", object="init", object_id = ctx['context']['IDexperiment'])
+    logger.log(message, details="", object="", object_id = ctx['context']['IDexperiment'])
+
+    
+    
 
 def measures(experiment, metric, values, validation, ctx):
     measures = Measures(ctx['backend'], ctx['context']['IDexperiment'])
