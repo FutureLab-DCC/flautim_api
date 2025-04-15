@@ -65,7 +65,7 @@ class Experiment(object):
     
     def run(self, metrics, name_log = 'centralized.log', post_processing_fn = [], **kwargs):
 
-        fl.log("Olá, estamos no run!", self.context.context)
+        fl.log(f"Ola, estamos no run!", self.context.context)
 
         logging.basicConfig(filename=name_log,
                         filemode='w',  # 'a' para append, 'w' para sobrescrever
@@ -89,7 +89,7 @@ class Experiment(object):
         #output_path = self.context['output_path']
         #epochs = self.context['epochs']
 
-        fl.log("Starting Centralized Training", self.context.context)
+        fl.log(f"Starting Centralized Training", self.context.context)
 
         def schedule_file_logging():
             schedule.every(2).seconds.do(self.backend.write_experiment_results_callback('./centralized.log', self.id)) 
@@ -111,11 +111,11 @@ class Experiment(object):
 
             copy_model_wights(self.context.context['path'], self.context.context['output_path'], self.id, self.logger) 
 
-            fl.log("Finishing Centralized Training", context=self.context.context)
+            fl.log(f"Finishing Centralized Training", context=self.context.context)
         except Exception as ex:
             update_experiment_status(self.backend, self.id, "error")  
-            fl.log("Error during Centralized Training", details=str(ex), context=self.context.context)
-            fl.log("Stacktrace of Error during Centralized Training", details=traceback.format_exc(), context=self.context.context)
+            fl.log(f"Error during Centralized Training", details=str(ex), context=self.context.context)
+            fl.log(f"Stacktrace of Error during Centralized Training", details=traceback.format_exc(), context=self.context.context)
             
         
         self.backend.write_experiment_results('./centralized.log', self.id)
