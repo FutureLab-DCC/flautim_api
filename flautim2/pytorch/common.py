@@ -151,7 +151,7 @@ class ExperimentContext(object):
         
         self.context = context
 
-        self.id = self.context.IDexperiment
+        self.id = self.context['IDexperiment']
 
         variables = get_experiment_variables(self.context, self.id)
 
