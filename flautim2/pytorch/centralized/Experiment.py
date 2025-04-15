@@ -32,7 +32,7 @@ class Experiment(object):
             self.context['status'](stat)
         except Exception as ex:
             #self.logger.log("Error while updating status", details=str(ex), object="experiment_fit", object_id=self.id )
-            fl.log("Error while updating status", details=str(ex), object="experiment_fit", object_id=self.id )
+            fl.log(f"Error while updating status: {str(ex)}", self.context.context)
 
     def set_parameters(self, parameters):
         self.model.set_parameters(parameters)
@@ -41,7 +41,7 @@ class Experiment(object):
         return self.model.get_parameters()
         
     def fit(self, **kwargs):
-        fl.log("Model training started", self.context.context)
+        fl.log(f"Model training started", self.context.context)
 
         for epochs in range(1, self.epochs+1):
             start_time = time.time()
@@ -52,7 +52,7 @@ class Experiment(object):
                 # f'Time: {elapsed_time:.2f} seconds', details="", object="experiment_fit", object_id=self.id )
             
             fl.log(f'[TRAIN] Epoch [{epochs}] Training Loss: {epoch_loss:.4f}, ' +
-                f'Time: {elapsed_time:.2f} seconds', context=self.context)
+                f'Time: {elapsed_time:.2f} seconds', self.context)
             
             #self.measures.log(self, metrics.CROSSENTROPY, epoch_loss, validation=False)
             #self.measures.log(self, metrics.ACCURACY, acc, validation=False)
