@@ -65,8 +65,6 @@ class Experiment(object):
     
     def run(self, metrics, name_log = 'centralized.log', post_processing_fn = [], **kwargs):
 
-        fl.log(f"Ola, estamos no run!", self.context.context)
-
         logging.basicConfig(filename=name_log,
                         filemode='w',  # 'a' para append, 'w' para sobrescrever
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -101,6 +99,8 @@ class Experiment(object):
         thread_schedulling = threading.Thread(target=schedule_file_logging)
         thread_schedulling.daemon = True
         thread_schedulling.start()
+
+        fl.log(f"Ola, estamos no schedule_file_logging!", self.context.context)
 
         try:
             update_experiment_status(self.backend, self.id, "running")  
