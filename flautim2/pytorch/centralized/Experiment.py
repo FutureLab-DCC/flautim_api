@@ -13,6 +13,7 @@ class Experiment(object):
         self.id = context['context']['IDexperiment']
         self.model = model
         self.dataset = dataset
+        self.backend = context['backend']
 
         self.context = ExperimentContext(context['context'])
 
@@ -20,7 +21,9 @@ class Experiment(object):
         # self.dataset.id = self.context.dataset
 
         # self.model.logger = self.logger
+
         self.epochs = kwargs.get('epochs', 1)
+
         #self.epoch_fl = 0
 
     def status(self, stat: ExperimentStatus):
@@ -77,17 +80,17 @@ class Experiment(object):
         root.addHandler(console_handler)
 
         # _, ctx, backend, logger, _ = get_argparser()
-        ctx = fl.init()
+        # ctx = fl.init()
         
-        experiment_id = ctx['context']['IDexperiment']
-        path = ctx['context']['path']
-        output_path = ctx['context']['output_path']
-        #epochs = ctx['context']['epochs']
+        #experiment_id = self.context['IDexperiment']
+        #path = self.context['path']
+        #output_path = self.context['output_path']
+        #epochs = self.context['epochs']
 
-        fl.log("Starting Centralized Training", ctx)
+        fl.log("Starting Centralized Training", self.context)
 
         def schedule_file_logging():
-            schedule.every(2).seconds.do(ctx['backend'].write_experiment_results_callback('./centralized.log', experiment_id)) 
+            schedule.every(2).seconds.do(self.backend.write_experiment_results_callback('./centralized.log', self.context['IDexperiment'])) 
         
             while True:
                 schedule.run_pending()
@@ -98,19 +101,19 @@ class Experiment(object):
         thread_schedulling.start()
 
         try:
-            update_experiment_status(ctx['backend'], experiment_id, "running")  
+            update_experiment_status(self.backend, experiment_id, "running")  
 
             self.fit()
         
-            update_experiment_status(ctx['backend'], experiment_id, "finished") 
+            update_experiment_status(self.backend, experiment_id, "finished") 
 
-            copy_model_wights(path, output_path, experiment_id, logger) 
+            copy_model_wights(self.context['path'], self.context['output_path'], experiment_id, logger) 
 
             fl.log("Finishing Centralized Training", context=self.context)
         except Exception as ex:
-            update_experiment_status(ctx['backend'], experiment_id, "error")  
+            update_experiment_status(self.backend, experiment_id, "error")  
             fl.log("Error during Centralized Training", details=str(ex), context=self.context)
             fl.log("Stacktrace of Error during Centralized Training", details=traceback.format_exc(), context=self.context)
             
         
-        ctx['backend'].write_experiment_results('./centralized.log', experiment_id)
+        self.backend.write_experiment_results('./centralized.log', experiment_id)
