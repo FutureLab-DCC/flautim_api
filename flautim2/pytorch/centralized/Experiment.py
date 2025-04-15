@@ -63,7 +63,7 @@ class Experiment(object):
     def training_loop(self, data_loader):
         raise NotImplementedError("The training_loop method should be implemented!")
     
-    def run(self, name_log = 'centralized.log', post_processing_fn = [], **kwargs):
+    def run(self, metrics, name_log = 'centralized.log', post_processing_fn = [], **kwargs):
 
         logging.basicConfig(filename=name_log,
                         filemode='w',  # 'a' para append, 'w' para sobrescrever
