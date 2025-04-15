@@ -7,11 +7,8 @@ _backend = None
 _logger = None
 _measures = None
 
-def init():
+def init(parser, context, backend, logger, measures):
 
-    parser, context, backend, logger, measures = get_argparser()
-
-    logger = Logger(backend, context)
     logger.log("Olá! Esta é a função init!", details="", object="init", object_id=context.IDexperiment)
 
     with open("config.csv", "r") as file:
@@ -23,8 +20,6 @@ def init():
     _backend = Backend(server = _ctx['db']['host'], port = _ctx['db']['port'], user = _ctx['db']['username'], password= _ctx._ctx['db']['password'])
     _logger = logger(_backend, _ctx)
     _measures = Measures(_backend, _ctx)
-
-    return parser, context, backend, logger, measures
 
 def log(message):
     print("log!")
