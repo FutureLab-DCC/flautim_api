@@ -45,16 +45,20 @@ def init():
         }
     }
 
-    context = Config(config_file)
+    
 
-    backend = Backend(server = context.db.dbserver, port = context.db.dbport, user = context.db.dbuser, password = context.db.dbpw)
-    logger = Logger(context.backend, context.filesystem.user)
+    backend = Backend(server = ctx.dbserver, port = ctx.dbport, user = ctx.dbuser, password = ctx.dbpw)
+    logger = Logger(backend, ctx.user)
+
+    logger.log("Flautim2 initialized",details="", object="", object_id = ctx.IDexperiment)
+
+    context = Config(config_file)
 
     context.backend = Backend(server = context.db.dbserver, port = context.db.dbport, user = context.db.dbuser, password = context.db.dbpw)
     context.logger = Logger(context.backend, context.filesystem.user)
     context.measures = Measures(context.backend, context.experiment.id)
 
-    logger.log("Flautim2 initialized",details="", object="", object_id = context.experiment.id)
+    
 
 
     return context
@@ -69,8 +73,5 @@ def log(message, context):
 def measures(experiment, metric, values, validation, context):
     # measures = Measures(ctx['backend'], ctx['context']['IDexperiment'])
     context.measures.log(experiment, metric, values, validation = False)
-
-    
-    
 
 
