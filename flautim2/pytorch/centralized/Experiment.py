@@ -17,8 +17,8 @@ class Experiment(object):
         self.context = context
         self.experiment_context = ExperimentContext(context)
 
-        self.model.id = self.context.model
-        self.dataset.id = self.context.dataset
+        #self.model.id = self.context.model
+        #self.dataset.id = self.context.dataset
 
         # self.model.logger = self.logger
 
