@@ -56,7 +56,7 @@ def init():
 
     context = Config(config_file)
 
-    logger.log("Config: {context}", details="", object="experiment_fit", object_id=ctx.IDexperiment)
+    logger.log(f"Config: {context}", details="", object="experiment_fit", object_id=ctx.IDexperiment)
 
     context.backend = Backend(server = context.db.dbserver, port = context.db.dbport, user = context.db.dbuser, password = context.db.dbpw)
     context.logger = Logger(context.backend, context.filesystem)
@@ -69,7 +69,7 @@ def init():
 
 def log(message, context):
     # logger = Logger(ctx['backend'], ctx['context']['user'])
-    context.logger.log(message)
+    context.logger.log(message, details="", object="experiment_fit", object_id=context.experiment.id)
 
     
     
