@@ -164,6 +164,7 @@ class ExperimentContext(object):
 
 
 
+
 def fit_config(server_round: int):
     """Return training configuration dict for each round.
 
@@ -385,6 +386,20 @@ def copy_model_wights(path, output_path, id, logger):
     except Exception as e:
         logger.log("Erro while copying model wights", details=str(e), object="filesystem_file", object_id=id )
 
-    
 
+class Config(dict):
+    def __init__(self, d):
+        for key, value in d.items():
+            if isinstance(value, dict):
+                value = Config(value)
+            self[key] = value
+
+    def __getattr__(self, name):
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError(f"Config object has no attribute '{name}'")
+
+    def __setattr__(self, name, value):
+        self[name] = value
 
