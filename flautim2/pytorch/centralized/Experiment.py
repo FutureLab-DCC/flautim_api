@@ -10,15 +10,15 @@ import time
 class Experiment(object):
     def __init__(self, model : Model, dataset : Dataset, context, **kwargs) -> None:
         super().__init__()
-        self.id = context['context']['IDexperiment']
+        self.id = context.experiment.id
         self.model = model
         self.dataset = dataset
-        self.backend = context['backend']
         
-        self.context = ExperimentContext(context)
+        self.context = context
+        self.experiment_context = ExperimentContext(context)
 
-        # self.model.id = self.context.model
-        # self.dataset.id = self.context.dataset
+        self.model.id = self.context.model
+        self.dataset.id = self.context.dataset
 
         # self.model.logger = self.logger
 
@@ -28,10 +28,10 @@ class Experiment(object):
 
     def status(self, stat: ExperimentStatus):
         try:
-            self.context['status'](stat)
+            self.experiment_context['status'](stat)
         except Exception as ex:
             #self.logger.log("Error while updating status", details=str(ex), object="experiment_fit", object_id=self.id )
-            fl.log(f"Error while updating status: {str(ex)}", self.context.context)
+            fl.log(f"Error while updating status: {str(ex)}", self.context)
 
     def set_parameters(self, parameters):
         self.model.set_parameters(parameters)
@@ -40,7 +40,7 @@ class Experiment(object):
         return self.model.get_parameters()
         
     def fit(self, **kwargs):
-        fl.log(f"Model training started", self.context.context)
+        fl.log(f"Model training started", self.context)
 
         for epochs in range(1, self.epochs+1):
             start_time = time.time()
@@ -56,7 +56,7 @@ class Experiment(object):
             #self.measures.log(self, metrics.CROSSENTROPY, epoch_loss, validation=False)
             #self.measures.log(self, metrics.ACCURACY, acc, validation=False)
 
-        fl.log("Model training finished", self.context.context)
+        fl.log("Model training finished", self.context)
 
         self.model.save()
 
@@ -88,10 +88,10 @@ class Experiment(object):
         #output_path = self.context['output_path']
         #epochs = self.context['epochs']
 
-        fl.log(f"Starting Centralized Training", self.context.context)
+        fl.log(f"Starting Centralized Training", self.context)
 
         def schedule_file_logging():
-            schedule.every(2).seconds.do(self.backend.write_experiment_results_callback('./centralized.log', self.id)) 
+            schedule.every(2).seconds.do(self.context.backend.write_experiment_results_callback('./centralized.log', self.id)) 
         
             while True:
                 schedule.run_pending()
@@ -103,32 +103,26 @@ class Experiment(object):
 
         
 
-        fl.log(f"Ola, estamos no schedule_file_logging!", self.context.context)
+        fl.log(f"Ola, estamos no schedule_file_logging!", self.context)
 
         try:
-            update_experiment_status(self.backend, self.id, "running")  
+            update_experiment_status(self.context.backend, self.id, "running")  
 
-            fl.log(f"Ola, estamos no update_experiment_status!", self.context.context)
+            fl.log(f"Ola, estamos no update_experiment_status!", self.context)
 
             self.fit()
         
-            update_experiment_status(self.backend, self.id, "finished")
+            update_experiment_status(self.context.backend, self.id, "finished")
 
-            logger = Logger(self.context['backend'], self.context['context']['user'])
+            copy_model_wights(self.context.filesystem.path, self.context.filesystem.output_path, self.id, self.context.logger) 
 
-            copy_model_wights(self.context.context['path'], self.context.context['output_path'], self.id, logger) 
-
-            fl.log(f"Finishing Centralized Training", context=self.context.context)
+            fl.log(f"Finishing Centralized Training", context=self.context)
 
         except Exception as ex:
-            update_experiment_status(self.backend, self.id, "error")  
-            fl.log(f"Error during Centralized Training: {str(ex)}", self.context.context)
-            fl.log(f"Stacktrace of Error during Centralized Training: {traceback.format_exc()}", self.context.context)
+            update_experiment_status(self.context.backend, self.id, "error")  
+            fl.log(f"Error during Centralized Training: {str(ex)}", self.context)
+            fl.log(f"Stacktrace of Error during Centralized Training: {traceback.format_exc()}", self.context)
             
         
-        self.backend.write_experiment_results('./centralized.log', self.id)
-
-            
-        
-        self.backend.write_experiment_results('./centralized.log', self.id)
+        self.context.backend.write_experiment_results('./centralized.log', self.id)
 
