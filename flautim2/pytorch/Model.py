@@ -2,6 +2,7 @@
 import uuid
 from datetime import datetime
 import os
+import flautim2 as fl
 
 from collections import OrderedDict
 
@@ -13,21 +14,21 @@ class Model(nn.Module):
         super(Model, self).__init__()
         
         self.uid = kwargs.get('id',str(uuid.uuid1()))
-        self.name = kwargs.get('name', context['user'])
+        self.name = kwargs.get('name', context.filesystem.user)
         self.suffix = kwargs.get('suffix', '')
         if self.suffix == '':
             self.suffix = 'FL-Global'
         self.version = kwargs.get('version', '1')
         
-        self.path = context['path']
-        self.logger = kwargs.get('logger',None)
+        self.path = context.filesystem.path
+        #self.logger = kwargs.get('logger',None)
 
         self.file = "{}/models/{}{}.h5".format(self.path, self.name, self.suffix)
         self.checkpoint_file = "{}/models/{}{}-{}.h5"
 
-    def __log(self, msg, **kwargs):
-        if not self.logger is None:
-            self.logger.log(msg, **kwargs)
+    # def __log(self, msg, **kwargs):   # Dúvidas sobre essa função ???????????????
+    #     if not self.logger is None:
+    #         fl.log(msg, **kwargs)
 
     def set_parameters(self, parameters):
         params_dict = zip(self.state_dict().keys(), parameters)
