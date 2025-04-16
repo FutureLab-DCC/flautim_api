@@ -56,18 +56,16 @@ def init():
 
 def log(message, context):
     # logger = Logger(ctx['backend'], ctx['context']['user'])
-    context.experiment.logger.log(message, details="", object="", object_id = context.experiment.id)
+    context.logger.log(message, details="", object="", object_id = context.experiment.id)
 
     
     
 
 def measures(experiment, metric, values, validation, context):
     # measures = Measures(ctx['backend'], ctx['context']['IDexperiment'])
-    context.experiment.measures.log(experiment, metric, values, validation = False)
+    context.measures.log(experiment, metric, values, validation = False)
 
     
     
 
-def measures(experiment, metric, values, validation, ctx):
-    measures = Measures(ctx['backend'], ctx['context']['IDexperiment'])
-    measures.log(experiment, metric, values, validation = False)
+
