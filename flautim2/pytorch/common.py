@@ -126,18 +126,18 @@ class ExperimentStatus(str, Enum):
     ABORTED = "aborted"
     ERROR = "error"
 
-def get_experiment_variables(context, experiment_id):
-    backend = Backend(
-        server=context['dbserver'],
-        port=context['dbport'],
-        user=context['dbuser'],
-        password=context['dbpw']
-    )
+def get_experiment_variables(context):
+    # backend = Backend(
+    #     server = context.db.dbserver,
+    #     port = context.db.dbport,
+    #     user = context.db.dbuser,
+    #     password = context.db.dbpw
+    # )
     # Use context manager to avoid leaks
-    with pymongo.MongoClient(backend.connection_string) as client:
+    with pymongo.MongoClient(context.backend.connection_string) as client:
         db = client["flautim"]
         experiments = db["experimento"]
-        experiment = experiments.find_one({"_id": experiment_id})
+        experiment = experiments.find_one({"_id": context.experiment.id})
        
         return {"projectId": experiment["projectId"],
                 "modelId": experiment["modelId"],
@@ -148,12 +148,8 @@ def get_experiment_variables(context, experiment_id):
 class ExperimentContext(object):
     def __init__(self, context, no_db=False):
         super().__init__()
-        
-        self.context = context
 
-        self.id = self.context['context']['IDexperiment']
-
-        variables = get_experiment_variables(self.context['context'], self.id)
+        variables = get_experiment_variables(context)
 
         # Assign fetched variables to class attributes
         self.project = variables["projectId"]
