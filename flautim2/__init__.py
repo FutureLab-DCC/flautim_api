@@ -48,7 +48,7 @@ def init():
     
 
     backend = Backend(server = ctx.dbserver, port = ctx.dbport, user = ctx.dbuser, password = ctx.dbpw)
-    logger = Logger(backend, ctx.user)
+    logger = Logger(backend, ctx)
 
     logger.log("Flautim2 initialized",details="", object="", object_id = ctx.IDexperiment)
 
