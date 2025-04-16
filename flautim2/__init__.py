@@ -50,7 +50,7 @@ def init():
     backend = Backend(server = ctx.dbserver, port = ctx.dbport, user = ctx.dbuser, password = ctx.dbpw)
     logger = Logger(backend, ctx)
 
-    logger.log("Estou na função init", details="", object="experiment_fit", object_id=context.experiment.id)
+    logger.log("Estou na função init", details="", object="experiment_fit", object_id=ctx.IDexperiment)
 
     context = Config(config_file)
 
