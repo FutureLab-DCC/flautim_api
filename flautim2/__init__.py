@@ -45,37 +45,18 @@ def init():
         }
     }
 
-    
-
-    backend = Backend(server = ctx.dbserver, port = ctx.dbport, user = ctx.dbuser, password = ctx.dbpw)
-    logger = Logger(backend, ctx)
-
-    logger.log("Estou na função init", details="", object="experiment_fit", object_id=ctx.IDexperiment)
-
-    logger.log("Estou na função init2")
-
     context = Config(config_file)
-
-    logger.log(f"Config: {context}", details="", object="experiment_fit", object_id=ctx.IDexperiment)
 
     context.backend = Backend(server = context.db.dbserver, port = context.db.dbport, user = context.db.dbuser, password = context.db.dbpw)
     context.logger = Logger(context.backend, context.filesystem)
     context.measures = Measures(context.backend, context.experiment.id)
 
-    
-
-
     return context
 
 def log(message, context):
-    # logger = Logger(ctx['backend'], ctx['context']['user'])
     context.logger.log(message, details="", object="experiment_fit", object_id=context.experiment.id)
-
     
-    
-
 def measures(experiment, metric, values, validation, context):
-    # measures = Measures(ctx['backend'], ctx['context']['IDexperiment'])
     context.measures.log(experiment, metric, values, validation = False)
 
 
