@@ -70,7 +70,7 @@ class Logger(object):
         
         self.backend = backend
         
-        self.user = context.filesystem.user
+        self.user = context.user
         
     def log(self, msg : str, **append):
         ts = str(datetime.now())
