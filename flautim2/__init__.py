@@ -1,4 +1,4 @@
-from flautim2.pytorch.common import Backend, Logger, Measures, get_argparser
+from flautim2.pytorch.common import Backend, Logger, Measures, get_argparser, Config
 import pandas as pd
 import yaml
 import argparse
@@ -25,36 +25,45 @@ def init():
     parser.add_argument("--IDexperiment", type=str, required=True, default=0)
     ctx = parser.parse_args()
 
-    file = {
-        'user': ctx.user,
-        'path': ctx.path,
-        'output_path': ctx.output_path,
-        'dbserver': ctx.dbserver,
-        'dbport': ctx.dbport,
-        'dbuser': ctx.dbuser,
-        'dbpw': ctx.dbpw,
-        'clients': ctx.clients,
-        'rounds': ctx.rounds,
-        'epochs': ctx.epochs,
-        'IDexperiment': ctx.IDexperiment
+    config_file = {
+        "db": {
+            'dbserver': ctx.dbserver,
+            'dbport': ctx.dbport,
+            'dbuser': ctx.dbuser,
+            'dbpw': ctx.dbpw
+        },
+        "experiment": {
+            "id": ctx.IDexperiment,
+            'epochs': ctx.epochs,
+            'rounds': ctx.rounds,
+            'clients': ctx.clients
+        },
+        "filesystem": {
+            'user': ctx.user,
+            'path': ctx.path,
+            'output_path': ctx.output_path,
+        }
     }
+
+    context = Config(config_file)
+
+    context.backend = Backend(server = context.db.dbserver, port = context.db.dbport, user = context.db.dbuser, password = context.db.dbpw)
+    context.logger = Logger(context.experiment.backend, context.filesystem.user)
+    context.measures = Measures(context.experiment.backend, context.experiment.id)
+
+
+    return context
+
+def log(message, context):
+    # logger = Logger(ctx['backend'], ctx['context']['user'])
+    context.experiment.logger.log(message, details="", object="", object_id = context.experiment.id)
+
     
-    backend = Backend(server = file['dbserver'], port = file['dbport'], user = file['dbuser'], password = file['dbpw'])
+    
 
-    log(f"file: {file}", {
-        'backend': backend,
-        'context': file
-    })
-
-
-    return {
-        'backend': backend,
-        'context': file
-    }
-
-def log(message, ctx):
-    logger = Logger(ctx['backend'], ctx['context']['user'])
-    logger.log(message, details="", object="", object_id = ctx['context']['IDexperiment'])
+def measures(experiment, metric, values, validation, context):
+    # measures = Measures(ctx['backend'], ctx['context']['IDexperiment'])
+    context.experiment.measures.log(experiment, metric, values, validation = False)
 
     
     
