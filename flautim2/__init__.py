@@ -51,13 +51,14 @@ def init():
     context.logger = Logger(context.backend, context.filesystem.user)
     context.measures = Measures(context.backend, context.experiment.id)
 
-    context.logger.log("Flautim2 initialized", context)
-    
+    context.logger.log("Flautim2 initialized")
+
+
     return context
 
 def log(message, context):
     # logger = Logger(ctx['backend'], ctx['context']['user'])
-    context.logger.log(message, details="", object="", object_id = context.experiment.id)
+    context.logger.log(message)
 
     
     
