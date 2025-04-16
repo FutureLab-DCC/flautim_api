@@ -65,12 +65,12 @@ class Backend(object):
 
 
 class Logger(object):
-    def __init__(self, backend, user):
+    def __init__(self, backend, context):
         super().__init__()
         
         self.backend = backend
         
-        self.user = user
+        self.user = context.filesystem.user
         
     def log(self, msg : str, **append):
         ts = str(datetime.now())
