@@ -50,12 +50,12 @@ def init():
     backend = Backend(server = ctx.dbserver, port = ctx.dbport, user = ctx.dbuser, password = ctx.dbpw)
     logger = Logger(backend, ctx)
 
-    logger.log("Flautim2 initialized",details="", object="", object_id = ctx.IDexperiment)
+    logger.log("Estou na função init")
 
     context = Config(config_file)
 
     context.backend = Backend(server = context.db.dbserver, port = context.db.dbport, user = context.db.dbuser, password = context.db.dbpw)
-    context.logger = Logger(context.backend, context.filesystem.user)
+    context.logger = Logger(context.backend, context.filesystem)
     context.measures = Measures(context.backend, context.experiment.id)
 
     
