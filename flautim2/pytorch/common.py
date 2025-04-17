@@ -92,7 +92,7 @@ class Measures(object):
         data = { "Experiment": self.IDexperiment, "user": experiment.model.suffix, "timestamp": ts,
                  "metric" : str(metric), "model" : experiment.model.uid, "dataset": experiment.dataset.name, 
                 "values": values, "validation": validation,
-                "epoch" : experiment.epoch_fl if epoch is None else epoch }
+                "epoch" : experiment.epochs if epoch is None else epoch }
         data.update(append)
         
         self.backend.write_db(data, collection = 'measures')
@@ -402,4 +402,6 @@ class Config(dict):
 
     def __setattr__(self, name, value):
         self[name] = value
+
+    
 
