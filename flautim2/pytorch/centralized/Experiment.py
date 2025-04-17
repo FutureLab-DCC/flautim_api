@@ -4,7 +4,7 @@ from enum import Enum
 import os, threading, schedule, logging
 import flautim2 as fl
 from flautim2.pytorch import Model
-from flautim2.pytorch.common import ExperimentContext, ExperimentStatus, metrics, update_experiment_status, copy_model_wights
+from flautim2.pytorch.common import ExperimentContext, ExperimentStatus, update_experiment_status, copy_model_wights, Config
 import time
 
 class Experiment(object):
@@ -16,6 +16,8 @@ class Experiment(object):
         
         self.context = context
         self.experiment_context = ExperimentContext(context)
+
+        self.metrics = None
 
         #self.model.id = self.context.model
         #self.dataset.id = self.context.dataset
@@ -44,17 +46,15 @@ class Experiment(object):
 
         for epochs in range(1, self.epochs+1):
             start_time = time.time()
-            epoch_loss, acc = self.training_loop(self.dataset.dataloader())
+            epoch_loss, accuracy = self.training_loop(self.dataset.dataloader())
             elapsed_time = time.time() - start_time
             self.epochs = epochs
-            # self.logger.log(f'[TRAIN] Epoch [{epoca}] Training Loss: {epoch_loss:.4f}, ' +
-                # f'Time: {elapsed_time:.2f} seconds', details="", object="experiment_fit", object_id=self.id )
             
             fl.log(f'[TRAIN] Epoch [{epochs}] Training Loss: {epoch_loss:.4f}, ' +
                 f'Time: {elapsed_time:.2f} seconds', self.context)
-            
-            #self.measures.log(self, metrics.CROSSENTROPY, epoch_loss, validation=False)
-            #self.measures.log(self, metrics.ACCURACY, acc, validation=False)
+
+            fl.measures(self, 'CROSSENTROPY', epoch_loss, validation=False)
+            fl.measures(self, 'ACCURACY', accuracy, validation=False)
 
         fl.log("Model training finished", self.context)
 
@@ -65,6 +65,10 @@ class Experiment(object):
     
     
     def run(self, metrics, name_log = 'centralized.log', post_processing_fn = [], **kwargs):
+
+        self.metrics = Config(metrics)
+        self.metrics.LOSS = 0
+            
 
         logging.basicConfig(filename=name_log,
                         filemode='w',  # 'a' para append, 'w' para sobrescrever
@@ -107,8 +111,6 @@ class Experiment(object):
 
         try:
             update_experiment_status(self.context.backend, self.id, "running")  
-
-            fl.log(f"Ola, estamos no update_experiment_status!", self.context)
 
             self.fit()
         
