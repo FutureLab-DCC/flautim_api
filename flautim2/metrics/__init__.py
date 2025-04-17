@@ -11,8 +11,8 @@ def mean_squared_error(y, y_hat):
     Returns:
     - float: Mean Squared Error.
     """
-    y = np.asarray(y).reshape(-1, 1)
-    y_hat = np.asarray(y_hat).reshape(-1, 1)
+    y = np.asarray(y)
+    y_hat = np.asarray(y_hat)
     return np.mean((y - y_hat) ** 2)
 
 def root_mean_squared_error(y, y_hat):
