@@ -56,7 +56,7 @@ def init():
 def log(message, context):
     context.logger.log(message, details="", object="", object_id=context.experiment.id)
     
-def measures(experiment, metric, values, validation, context):
-    context.measures.log(experiment, metric, values, validation = False)
+def measures(experiment, metric, values, validation):
+    experiment.context.measures.log(experiment, metric, values, validation = False)
 
 
