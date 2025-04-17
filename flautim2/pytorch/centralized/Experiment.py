@@ -59,8 +59,6 @@ class Experiment(object):
         fl.log("Model training finished", self.context)
 
         fl.log("Model evaluate started", self.context)
-
-        self.model.set_parameters(parameters)
         
         accuracy = self.validation_loop(self.dataset.dataloader(validation = True))
         fl.measures(self, 'ACCURACY', accuracy, validation=True)
