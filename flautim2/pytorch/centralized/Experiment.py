@@ -19,8 +19,8 @@ class Experiment(object):
 
         self.metrics = None
 
-        #self.model.id = self.context.model
-        #self.dataset.id = self.context.dataset
+        self.model.id = self.experiment_context.model
+        self.dataset.id = self.experiment_context.dataset
 
         # self.model.logger = self.logger
 
@@ -58,7 +58,14 @@ class Experiment(object):
 
         fl.log("Model training finished", self.context)
 
-        self.model.save()
+        fl.log("Model evaluate started", self.context)
+
+        self.model.set_parameters(parameters)
+        
+        accuracy = self.validation_loop(self.dataset.dataloader(validation = True))
+        fl.measures(self, 'ACCURACY', accuracy, validation=True)
+
+        fl.log("Model evaluate finished", self.context)
 
     def training_loop(self, data_loader):
         raise NotImplementedError("The training_loop method should be implemented!")
@@ -66,7 +73,8 @@ class Experiment(object):
     
     def run(self, metrics, name_log = 'centralized.log', post_processing_fn = [], **kwargs):
 
-        self.metrics = Config(metrics)           
+        self.metrics = Config(metrics)
+                   
 
         logging.basicConfig(filename=name_log,
                         filemode='w',  # 'a' para append, 'w' para sobrescrever
@@ -125,4 +133,5 @@ class Experiment(object):
             
         
         self.context.backend.write_experiment_results('./centralized.log', self.id)
+
 
