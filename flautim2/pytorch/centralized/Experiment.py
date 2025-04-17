@@ -66,9 +66,7 @@ class Experiment(object):
     
     def run(self, metrics, name_log = 'centralized.log', post_processing_fn = [], **kwargs):
 
-        self.metrics = Config(metrics)
-        self.metrics.LOSS = 0
-            
+        self.metrics = Config(metrics)           
 
         logging.basicConfig(filename=name_log,
                         filemode='w',  # 'a' para append, 'w' para sobrescrever
