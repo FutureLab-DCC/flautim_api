@@ -54,8 +54,8 @@ def accuracy(y, y_hat):
     Returns:
     - float: Accuracy score (fraction of correct predictions).
     """
-    y = np.asarray(y).reshape(-1, 1)
-    y_hat = np.asarray(y_hat).reshape(-1, 1)
+    y = np.asarray(y)
+    y_hat = np.asarray(y_hat)
     return np.mean(y == y_hat)
 
 
