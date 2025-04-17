@@ -4,7 +4,7 @@ from enum import Enum
 import os, threading, schedule, logging
 import flautim2 as fl
 from flautim2.pytorch import Model
-from flautim2.pytorch.common import ExperimentContext, ExperimentStatus, update_experiment_status, copy_model_wights, Config
+from flautim2.pytorch.common import ExperimentContext, ExperimentStatus, update_experiment_status, copy_model_wights, Config, metrics
 import time
 
 class Experiment(object):
@@ -53,15 +53,16 @@ class Experiment(object):
             fl.log(f'[TRAIN] Epoch [{epochs}] Training Loss: {epoch_loss:.4f}, ' +
                 f'Time: {elapsed_time:.2f} seconds', self.context)
 
-            fl.measures(self, 'CROSSENTROPY', epoch_loss, validation=False)
-            fl.measures(self, 'ACCURACY', accuracy, validation=False)
+            fl.measures(self, metrics.CROSSENTROPY, epoch_loss, validation=False)
+            fl.measures(self, metrics.ACCURACY, accuracy, validation=False)
 
         fl.log("Model training finished", self.context)
 
         fl.log("Model evaluate started", self.context)
         
         accuracy = self.validation_loop(self.dataset.dataloader(validation = True))
-        fl.measures(self, 'ACCURACY', accuracy, validation=True)
+
+        fl.measures(self, metrics.ACCURACY, accuracy, validation=True)
 
         fl.log("Model evaluate finished", self.context)
 
@@ -109,9 +110,6 @@ class Experiment(object):
         thread_schedulling.daemon = True
         thread_schedulling.start()
 
-        
-
-        fl.log(f"Ola, estamos no schedule_file_logging!", self.context)
 
         try:
             update_experiment_status(self.context.backend, self.id, "running")  
@@ -131,5 +129,6 @@ class Experiment(object):
             
         
         self.context.backend.write_experiment_results('./centralized.log', self.id)
+
 
 
