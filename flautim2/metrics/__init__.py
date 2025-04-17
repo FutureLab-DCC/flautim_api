@@ -37,6 +37,11 @@ def normalized_root_mean_squared_error(y, y_hat):
     - y (np.ndarray): True values.
     - y_hat (np.ndarray): Predicted values.
 
+    Returns:
+    - float: Normalized RMSE (RMSE divided by the range of true values).
+    """
+    rmse = root_mean_squared_error(y, y_hat)
+    return rmse / (np.max(y) - np.min(y))
 
 def accuracy(y, y_hat):
     """
@@ -53,8 +58,4 @@ def accuracy(y, y_hat):
     y_hat = np.asarray(y_hat).reshape(-1, 1)
     return np.mean(y == y_hat)
 
-    Returns:
-    - float: Normalized RMSE (RMSE divided by the range of true values).
-    """
-    rmse = root_mean_squared_error(y, y_hat)
-    return rmse / (np.max(y) - np.min(y))
+
