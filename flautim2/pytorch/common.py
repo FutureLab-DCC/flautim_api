@@ -72,12 +72,13 @@ class Logger(object):
         
         self.user = context.user
         
-    def log(self, msg : str, **append):
+    def log(self, msg, details="", object="", object_id=None, **append):
         ts = str(datetime.now())
-        data = { "user": self.user, "timestamp": ts, "message" : msg }
-        if append is not None:
-                data.update(append)
-        self.backend.write_db(data, collection = 'logs')
+        data = { "user": self.user, "timestamp": ts, "message": msg, 
+                "details": details, "object": object, "object_id": object_id }
+        if append:
+            data.update(append)
+        self.backend.write_db(data, collection='logs')
 
 class Measures(object):
     def __init__(self, backend, IDexperiment):
@@ -403,5 +404,5 @@ class Config(dict):
     def __setattr__(self, name, value):
         self[name] = value
 
-    
+
 

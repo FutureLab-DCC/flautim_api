@@ -47,11 +47,19 @@ def init():
 
     context = Config(config_file)
 
-    context.backend = Backend(server = context.db.dbserver, port = context.db.dbport, user = context.db.dbuser, password = context.db.dbpw)
+    context.backend = Backend(server = context.db.dbserver, port = context.db.dbport,
+                               user = context.db.dbuser, password = context.db.dbpw)
     context.logger = Logger(context.backend, context.filesystem)
     context.measures = Measures(context.backend, context.experiment.id)
 
     return context
+
+def log(message, context):
+    try:
+        context.logger.log(message, details="", object="", object_id=context.experiment.id)
+    except Exception as e:
+        print(f"[LOG FALLBACK] {message} (error: {e})")
+    
 
 def log(message, context):
     context.logger.log(message, details="", object="", object_id=context.experiment.id)
