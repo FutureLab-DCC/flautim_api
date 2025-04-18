@@ -1,4 +1,4 @@
-from flautim2.pytorch.common import Backend, Logger, Measures, get_argparser, Config, get_context, set_context
+from flautim2.pytorch.common import Backend, Logger, Measures, get_argparser, Config
 import pandas as pd
 import yaml
 import argparse
@@ -52,18 +52,17 @@ def init():
     context.logger = Logger(context.backend, context.filesystem)
     context.measures = Measures(context.backend, context.experiment.id)
 
-    set_context(context)
-
     return context
 
-
-def log(message):
-    context = get_context()
+def log(message, context):
     try:
         context.logger.log(message, details="", object="", object_id=context.experiment.id)
     except Exception as e:
         print(f"[LOG FALLBACK] {message} (error: {e})")
+    
 
+def log(message, context):
+    context.logger.log(message, details="", object="", object_id=context.experiment.id)
     
 def measures(experiment, metric, values, validation = False):
     experiment.context.measures.log(experiment, metric, values, validation)

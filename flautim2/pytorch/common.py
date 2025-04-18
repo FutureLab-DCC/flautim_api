@@ -16,7 +16,7 @@ class Backend(object):
     def __init__(self, **kwargs):
         super().__init__()
         self._server = kwargs.get('server', '127.0.0.1')
-        self._port = kwargs.get('port', '27017')
+        self. _port = kwargs.get('port', '27017')
         self._user = kwargs.get('user', None)
         self._pw = kwargs.get('password', None)
         self._db = kwargs.get('authentication', 'admin')
@@ -61,16 +61,7 @@ class Backend(object):
             self.write_experiment_results(file_path=file_path, experiment=experiment)
                 
         return fn_callback
-
-_context = None
-
-def set_context(ctx):
-    global _context
-    _context = ctx
-
-def get_context():
-    return _context
-
+        
 
 
 class Logger(object):
