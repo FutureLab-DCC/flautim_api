@@ -91,7 +91,7 @@ class Measures(object):
     def log(self, experiment, metric, values, validation = False, epoch = None, **append):
         ts = str(datetime.now())
         data = { "Experiment": self.IDexperiment, "user": experiment.model.suffix, "timestamp": ts,
-                 "metric" : str(metric), "model" : experiment.model.uid, "dataset": experiment.dataset.name, 
+                 "metric" : metric, "model" : experiment.model.uid, "dataset": experiment.dataset.name, 
                 "values": values, "validation": validation,
                 "epoch" : experiment.epochs if epoch is None else epoch }
         data.update(append)
