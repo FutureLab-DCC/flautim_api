@@ -1,7 +1,6 @@
-import argparse
 from flautim2.pytorch import Dataset, common
 from enum import Enum
-import os, threading, schedule, logging
+import threading, schedule, logging
 import flautim2 as fl
 from flautim2.pytorch import Model
 from flautim2.pytorch.common import ExperimentContext, ExperimentStatus, update_experiment_status, copy_model_wights, Config, metrics
@@ -22,17 +21,12 @@ class Experiment(object):
         self.model.id = self.experiment_context.model
         self.dataset.id = self.experiment_context.dataset
 
-        # self.model.logger = self.logger
-
         self.epochs = kwargs.get('epochs', 1)
-
-        #self.epoch_fl = 0
 
     def status(self, stat: ExperimentStatus):
         try:
             self.experiment_context['status'](stat)
         except Exception as ex:
-            #self.logger.log("Error while updating status", details=str(ex), object="experiment_fit", object_id=self.id )
             fl.log(f"Error while updating status: {str(ex)}")
 
     def set_parameters(self, parameters):
@@ -42,31 +36,42 @@ class Experiment(object):
         return self.model.get_parameters()
         
     def fit(self, **kwargs):
+
         fl.log(f"Model training started")
 
         for epochs in range(1, self.epochs+1):
             start_time = time.time()
-            epoch_loss, accuracy = self.training_loop(self.dataset.dataloader())
+            values_metrics_train = self.training_loop(self.dataset.dataloader())
             elapsed_time = time.time() - start_time
             self.epochs = epochs
             
-            fl.log(f'[TRAIN] Epoch [{epochs}] Training Loss: {epoch_loss:.4f}, ' +
+            fl.log(f'[TRAIN] Epoch [{epochs}] Training Loss: {values_metrics_train['LOSS']:.4f}, ' +
                 f'Time: {elapsed_time:.2f} seconds')
-
-            fl.measures(self, metrics.CROSSENTROPY, epoch_loss, validation=False)
-            fl.measures(self, metrics.ACCURACY, accuracy, validation=False)
+            
+            for name in values_metrics_train:
+                fl.measures(self, 'metrics.' + name, values_metrics_train[name], validation=False)
 
         fl.log("Model training finished")
 
+        
+    
+    def evaluate(self, **kwargs):
+
         fl.log("Model evaluate started")
         
-        accuracy = self.validation_loop(self.dataset.dataloader(validation = True))
+        values_metrics_validation = self.validation_loop(self.dataset.dataloader(validation = True))
 
-        fl.measures(self, metrics.ACCURACY, accuracy, validation=True)
+        for name in values_metrics_validation:
+                fl.measures(self, 'metrics.' + name, values_metrics_validation[name], validation=True)
 
         fl.log("Model evaluate finished")
 
+
     def training_loop(self, data_loader):
+        raise NotImplementedError("The training_loop method should be implemented!")
+    
+    
+    def validation_loop(self, data_loader):
         raise NotImplementedError("The training_loop method should be implemented!")
     
     
@@ -90,14 +95,6 @@ class Experiment(object):
 
         root.addHandler(console_handler)
 
-        # _, ctx, backend, logger, _ = get_argparser()
-        # ctx = fl.init()
-        
-        #experiment_id = self.context['IDexperiment']
-        #path = self.context['path']
-        #output_path = self.context['output_path']
-        #epochs = self.context['epochs']
-
         fl.log(f"Starting Centralized Training")
 
         def schedule_file_logging():
@@ -116,6 +113,8 @@ class Experiment(object):
             update_experiment_status(self.context.backend, self.id, "running")  
 
             self.fit()
+
+            self.evaluate()
         
             update_experiment_status(self.context.backend, self.id, "finished")
 
@@ -130,6 +129,7 @@ class Experiment(object):
             
         
         self.context.backend.write_experiment_results('./centralized.log', self.id)
+
 
 
 
