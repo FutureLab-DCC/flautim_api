@@ -121,7 +121,7 @@ class Experiment(object):
 
             copy_model_wights(self.context.filesystem.path, self.context.filesystem.output_path, self.id, self.context.logger) 
 
-            fl.log(f"Finishing Centralized Training", context=self.context)
+            fl.log(f"Finishing Centralized Training")
 
         except Exception as ex:
             update_experiment_status(self.context.backend, self.id, "error")  
