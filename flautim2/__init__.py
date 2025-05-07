@@ -3,9 +3,16 @@ import pandas as pd
 import yaml
 import argparse
 
+class Init:
+    def __init__(self):
+        self.context = None
 
+_init_instance = None
 
 def init():
+
+    global _init_instance
+    _init_instance = Init()
 
     # with open("config.csv", "r") as file:
     #     ctx = yaml.safe_load(file)
@@ -45,7 +52,7 @@ def init():
         }
     }
 
-    context = Config(config_file)
+    _init_instance.context = Config(config_file)
 
     context.backend = Backend(server = context.db.dbserver, port = context.db.dbport,
                                user = context.db.dbuser, password = context.db.dbpw)
@@ -53,16 +60,10 @@ def init():
     context.measures = Measures(context.backend, context.experiment.id)
 
     return context
-
-def log(message, context):
-    try:
-        context.logger.log(message, details="", object="", object_id=context.experiment.id)
-    except Exception as e:
-        print(f"[LOG FALLBACK] {message} (error: {e})")
     
 
-def log(message, context):
-    context.logger.log(message, details="", object="", object_id=context.experiment.id)
+def log(message):
+    context.logger.log(message, details="", object="", object_id=_init_instance.context.experiment.id)
     
 def measures(experiment, metric, values, validation = False):
     experiment.context.measures.log(experiment, metric, values, validation)
