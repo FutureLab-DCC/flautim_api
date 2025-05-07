@@ -18,7 +18,6 @@ class Experiment(object):
         self.experiment_context = ExperimentContext(context)
 
         self.metrics = None
-        self.metric_int = None
 
         self.model.id = self.experiment_context.model
         self.dataset.id = self.experiment_context.dataset
@@ -72,10 +71,9 @@ class Experiment(object):
     
     
     def run(self, metrics, name_log = 'centralized.log', post_processing_fn = [], **kwargs):
-
+        
+        metrics['LOSS'] = None
         self.metrics = Config(metrics)
-
-        self.metric_int = {name: idx + 1 for idx, name in enumerate(metrics)}
                    
         logging.basicConfig(filename=name_log,
                         filemode='w',  # 'a' para append, 'w' para sobrescrever
