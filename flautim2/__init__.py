@@ -52,12 +52,14 @@ def init():
         }
     }
 
-    _init_instance.context = Config(config_file)
+    context = Config(config_file)
 
     context.backend = Backend(server = context.db.dbserver, port = context.db.dbport,
                                user = context.db.dbuser, password = context.db.dbpw)
     context.logger = Logger(context.backend, context.filesystem)
     context.measures = Measures(context.backend, context.experiment.id)
+
+    _init_instance.context = context
 
     return context
     
