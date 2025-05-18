@@ -1,13 +1,13 @@
 import argparse
-from flautim.pytorch import Dataset, common
+from flautim2.pytorch import Dataset, common
 import numpy as np
 from enum import Enum
 import os
 import flwr as fl
-from flautim.pytorch import Model
-from flautim.pytorch.common import ExperimentContext, ExperimentStatus
+from flautim2.pytorch import Model
+from flautim2.pytorch.common import ExperimentContext, ExperimentStatus
 
-from flautim.pytorch.common import metrics
+from flautim2.pytorch.common import metrics
 
 class Experiment(fl.client.NumPyClient):
     def __init__(self, model : Model, dataset : Dataset, measures, logger, context, **kwargs) -> None:
