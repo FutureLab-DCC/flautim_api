@@ -4,13 +4,14 @@ import numpy as np
 from enum import Enum
 import os
 import flwr as fl
+import flautim2 as fl_log
 from flautim2.pytorch import Model
 from flautim2.pytorch.common import ExperimentContext, ExperimentStatus
 
 from flautim2.pytorch.common import metrics
 
 class Experiment(fl.client.NumPyClient):
-    def __init__(self, model : Model, dataset : Dataset, measures, logger, context, **kwargs) -> None:
+    def __init__(self, model : Model, dataset : Dataset, measures, context, **kwargs) -> None:
         super().__init__()
         self.id = context.IDexperiment
         self.model = model
@@ -19,21 +20,18 @@ class Experiment(fl.client.NumPyClient):
         self.measures = measures
         
         self.epoch_fl = 0
-        
-        self.logger = logger
-
         self.context = ExperimentContext(context)
 
         self.model.id = self.context.model
         self.dataset.id = self.context.dataset
 
-        self.model.logger = self.logger
+        #self.model.logger = self.logger
 
     def status(self, stat: ExperimentStatus):
         try:
             self.context.status(stat)
         except Exception as ex:
-            self.logger.log("Error while updating status", details=str(ex), object="experiment_fit", object_id=self.id )
+            fl_log.log("Error while updating status", details=str(ex), object="experiment_fit", object_id=self.id )
 
     def set_parameters(self, parameters):
         self.model.set_parameters(parameters)
@@ -42,35 +40,45 @@ class Experiment(fl.client.NumPyClient):
         return self.model.get_parameters()
         
     def fit(self, parameters, config):
-        self.logger.log("Model training started", details="", object="experiment_fit", object_id=self.id )
+        return_dic = {}
+        
+        fl_log.log("Model training started", details="", object="experiment_fit", object_id=self.id )
 
         self.model.set_parameters(parameters)
         
         self.epoch_fl = config["server_round"]
 
-        loss, acc = self.training_loop(self.dataset.dataloader())
+        values_metrics_train = self.training_loop(self.dataset.dataloader())
 
-        self.logger.log("Model training finished", details="", object="experiment_fit", object_id=self.id )
+        fl_log.log("Model training finished", details="", object="experiment_fit", object_id=self.id )
 
-        self.measures.log(self, metrics.MSE, loss, epoch = self.epoch_fl, validation=False)
+        for name in values_metrics_train:
+                fl.measures(self, 'metrics.' + name, values_metrics_train[name], validation=False)
+                return_dic[name] = float(values_metrics_train[name])
 
         self.model.save()
 
-        return self.model.get_parameters(), len(self.dataset.dataloader()), {"accuracy": float(acc)}
+        return self.model.get_parameters(), len(self.dataset.dataloader()), return_dic
 
     def evaluate(self, parameters, config):
 
-        self.logger.log("Model evaluation started", details="", object="experiment_evaluate", object_id=self.id )
+        return_dic = {}
+
+        fl_log.log("Model evaluation started", details="", object="experiment_evaluate", object_id=self.id )
         
         self.model.set_parameters(parameters)
         
-        loss, acc = self.validation_loop(self.dataset.dataloader(validation = True))
+        values_metrics_validation = self.validation_loop(self.dataset.dataloader(validation = True))
 
-        self.logger.log("Model training finished", details="", object="experiment_evaluate", object_id=self.id )
+        fl_log.log("Model training finished", details="", object="experiment_evaluate", object_id=self.id )
+
+        for name in values_metrics_validation:
+                fl.measures(self, 'metrics.' + name, values_metrics_validation[name], validation=True)
+                return_dic[name] = float(values_metrics_validation[name])
         
         self.model.save()
         
-        return float(loss), len(self.dataset.dataloader(validation = True)), {"accuracy": float(acc), "loss" : float(loss)}
+        return float(loss), len(self.dataset.dataloader(validation = True)), return_dic
 
     def training_loop(self, data_loader):
         raise NotImplementedError("The training_loop method should be implemented!")
