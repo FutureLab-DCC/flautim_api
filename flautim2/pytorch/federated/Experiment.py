@@ -11,13 +11,11 @@ from flautim2.pytorch.common import ExperimentContext, ExperimentStatus
 from flautim2.pytorch.common import metrics
 
 class Experiment(fl.client.NumPyClient):
-    def __init__(self, model : Model, dataset : Dataset, measures, context, **kwargs) -> None:
+    def __init__(self, model : Model, dataset : Dataset, context, **kwargs) -> None:
         super().__init__()
         self.id = context.IDexperiment
         self.model = model
         self.dataset = dataset
-        
-        self.measures = measures
         
         self.epoch_fl = 0
         self.context = ExperimentContext(context)
