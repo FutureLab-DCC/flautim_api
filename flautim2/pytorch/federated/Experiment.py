@@ -13,7 +13,7 @@ from flautim2.pytorch.common import metrics
 class Experiment(fl.client.NumPyClient):
     def __init__(self, model : Model, dataset : Dataset, context, **kwargs) -> None:
         super().__init__()
-        self.id = context.IDexperiment
+        self.id =  context.experiment.id
         self.model = model
         self.dataset = dataset
         
