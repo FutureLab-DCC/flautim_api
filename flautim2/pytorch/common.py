@@ -265,7 +265,39 @@ class CustomFedAvg(fl.server.strategy.FedAvg):
             
         return loss_aggregated, metrics_aggregated
 
-    
+
+def weighted_average(metrics) :
+    """Compute weighted average.
+
+    It is a generic implementation that averages only over floats and ints and drops the
+    other data types of the Metrics.
+    """
+    # num_samples_list can represent the number of samples
+    # or the number of batches depending on the client
+    num_samples_list = [n_batches for n_batches, _ in metrics]
+    num_samples_sum = sum(num_samples_list)
+    metrics_lists: Dict[str, List[float]] = {}
+    for num_samples, all_metrics_dict in metrics:
+        #  Calculate each metric one by one
+        for single_metric, value in all_metrics_dict.items():
+            if isinstance(value, (float, int)):
+                metrics_lists[single_metric] = []
+        # Just one iteration needed to initialize the keywords
+        break
+
+    for num_samples, all_metrics_dict in metrics:
+        # Calculate each metric one by one
+        for single_metric, value in all_metrics_dict.items():
+            # Add weighted metric
+            if isinstance(value, (float, int)):
+                metrics_lists[single_metric].append(float(num_samples * value))
+
+    weighted_metrics: Dict[str, Scalar] = {}
+    for metric_name, metric_values in metrics_lists.items():
+        weighted_metrics[metric_name] = sum(metric_values) / num_samples_sum
+
+    return weighted_metrics
+
 def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_fn = [], **kwargs):
 
     logging.basicConfig(filename=name_log,
@@ -314,7 +346,7 @@ def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_f
             min_available_clients=num_clients,  
             evaluate_fn=eval_fn,
             on_fit_config_fn=fit_config,
-            evaluate_metrics_aggregation_fn=client_fn("FL-Global").weighted_average
+            evaluate_metrics_aggregation_fn=weighted_average
         )
 
         update_experiment_status(backend, experiment_id, "running")  
