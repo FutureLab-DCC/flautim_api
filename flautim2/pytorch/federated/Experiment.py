@@ -53,6 +53,7 @@ class Experiment(fl.client.NumPyClient):
         self.log(f"Model training finished", details="", object="", object_id=self.id)
 
         for name in values_metrics_train:
+                self.log(f"Mesure: "+ 'metrics.' + str(name) + ": " + str(values_metrics_train[name]), details="", object="", object_id=self.id)
                 fl_log.measures(self, 'metrics.' + name, values_metrics_train[name], validation=False)
                 return_dic[name] = float(values_metrics_train[name])
 
@@ -73,6 +74,7 @@ class Experiment(fl.client.NumPyClient):
         self.log("Model training finished", details="", object="experiment_evaluate" )
 
         for name in values_metrics_validation:
+                self.log(f"Mesure: "+ 'metrics.' + str(name) + ": " + str(values_metrics_train[name]), details="", object="", object_id=self.id)
                 fl_log.measures(self, 'metrics.' + name, values_metrics_validation[name], validation=True)
                 return_dic[name] = float(values_metrics_validation[name])
         
