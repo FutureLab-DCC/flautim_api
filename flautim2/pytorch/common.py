@@ -12,6 +12,8 @@ import time, traceback, subprocess, sys
 
 from flwr.server.strategy.aggregate import weighted_loss_avg
 
+from flwr.server import ServerApp
+
 from flwr.client import ClientApp
 
 class Backend(object):
