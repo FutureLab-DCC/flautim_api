@@ -46,7 +46,7 @@ class Experiment(fl.client.NumPyClient):
 
         self.model.set_parameters(parameters)
 
-        self.log(f"Config="+str(config["server_round"]), details="", object="", object_id=self.id)
+        self.log(f"Config="+str(config), details="", object="", object_id=self.id)
         
         self.epoch_fl = config["server_round"]
 
