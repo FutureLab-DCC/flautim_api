@@ -1,4 +1,4 @@
-from flautim2.pytorch.common import Backend, Logger, Measures, get_argparser, Config
+taifrom flautim2.pytorch.common import Backend, Logger, Measures, get_argparser, Config
 import pandas as pd
 import yaml
 import argparse
@@ -64,8 +64,8 @@ def init():
     return context
     
 
-def log(message):
-    _init_instance.context.logger.log(message, details="", object="", object_id=_init_instance.context.experiment.id)
+def log(message, details = ""):
+    _init_instance.context.logger.log(message, details=str(details), object="", object_id=_init_instance.context.experiment.id)
     
 def measures(experiment, metric, values, validation = False):
     experiment.context.measures.log(experiment, metric, values, validation)
