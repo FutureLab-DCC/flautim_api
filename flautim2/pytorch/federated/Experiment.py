@@ -19,7 +19,7 @@ class Experiment(fl.client.NumPyClient):
         
         self.epoch_fl = 0
         self.context = ExperimentContext(context)
-        context = fl_log.init() 
+        fl_log.init() 
 
         self.model.id = self.context.model
         self.dataset.id = self.context.dataset
