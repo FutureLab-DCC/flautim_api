@@ -1,4 +1,4 @@
-taifrom flautim2.pytorch.common import Backend, Logger, Measures, get_argparser, Config
+from flautim2.pytorch.common import Backend, Logger, Measures, get_argparser, Config
 import pandas as pd
 import yaml
 import argparse
