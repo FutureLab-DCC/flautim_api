@@ -48,7 +48,7 @@ class Experiment(fl.client.NumPyClient):
 
         self.log(f"Config="+str(config), details="", object="", object_id=self.id)
         
-        self.epoch_fl = config["server_round"]
+        #self.epoch_fl = config["server_round"]
 
         values_metrics_train = self.training_loop(self.dataset.dataloader())
 
