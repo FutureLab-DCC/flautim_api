@@ -12,6 +12,8 @@ import time, traceback, subprocess, sys
 
 from flwr.server.strategy.aggregate import weighted_loss_avg
 
+from flwr.client import ClientApp
+
 class Backend(object):
     def __init__(self, **kwargs):
         super().__init__()
@@ -298,7 +300,8 @@ def weighted_average(metrics) :
 
     return weighted_metrics
 
-def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_fn = [], **kwargs):
+
+def run_federated(client_fn, server_fn, name_log = 'flower.log', post_processing_fn = [], **kwargs):
 
     logging.basicConfig(filename=name_log,
                     filemode='w',  # 'a' para append, 'w' para sobrescrever
@@ -340,26 +343,14 @@ def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_f
 
     try:
 
-        strategy = CustomFedAvg(
-            fraction_fit=fraction_fit,  
-            fraction_evaluate=fraction_evaluate,  
-            min_available_clients=num_clients,  
-            evaluate_fn=eval_fn,
-            on_fit_config_fn=fit_config,
-            evaluate_metrics_aggregation_fn=weighted_average
-        )
-
         update_experiment_status(backend, experiment_id, "running")  
     
         client_resources = {"num_cpus": 1, "num_gpus": 0.75} 
- 
-        h = fl.simulation.start_simulation(
-            client_resources=client_resources,
-            client_fn=client_fn, 
-            num_clients=num_clients, 
-            config=fl.server.ServerConfig(num_rounds=num_rounds),  
-            strategy=strategy,  
-        )
+
+        client_app = ClientApp(client_fn=client_fn)
+        server_app = ServerApp(server_fn=server_fn)
+        
+        flwr.simulation.run_simulation(server_app=server_app, client_app=client_app, num_supernodes=num_clients)
 
         update_experiment_status(backend, experiment_id, "finished") 
 
