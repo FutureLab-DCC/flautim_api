@@ -46,8 +46,6 @@ class Experiment(fl.client.NumPyClient):
 
         self.model.set_parameters(parameters)
 
-        self.log(f"Config="+str(config), details="", object="", object_id=self.id)
-        
         #self.epoch_fl = config["server_round"]
 
         values_metrics_train = self.training_loop(self.dataset.dataloader())
@@ -55,7 +53,7 @@ class Experiment(fl.client.NumPyClient):
         self.log(f"Model training finished", details="", object="", object_id=self.id)
 
         for name in values_metrics_train:
-                fl.measures(self, 'metrics.' + name, values_metrics_train[name], validation=False)
+                fl_log.measures(self, 'metrics.' + name, values_metrics_train[name], validation=False)
                 return_dic[name] = float(values_metrics_train[name])
 
         self.model.save()
@@ -75,7 +73,7 @@ class Experiment(fl.client.NumPyClient):
         self.log("Model training finished", details="", object="experiment_evaluate" )
 
         for name in values_metrics_validation:
-                fl.measures(self, 'metrics.' + name, values_metrics_validation[name], validation=True)
+                fl_log.measures(self, 'metrics.' + name, values_metrics_validation[name], validation=True)
                 return_dic[name] = float(values_metrics_validation[name])
         
         self.model.save()
