@@ -42,7 +42,7 @@ class Experiment(fl.client.NumPyClient):
     def fit(self, parameters, config):
         return_dic = {}
         
-        self.log(f"Model training started", details="", object="", object_id=self.id))
+        self.log(f"Model training started", details="", object="", object_id=self.id)
 
         self.model.set_parameters(parameters)
         
@@ -50,7 +50,7 @@ class Experiment(fl.client.NumPyClient):
 
         values_metrics_train = self.training_loop(self.dataset.dataloader())
 
-        fl_log.log("Model training finished")
+        self.log(f"Model training finished", details="", object="", object_id=self.id)
 
         for name in values_metrics_train:
                 fl.measures(self, 'metrics.' + name, values_metrics_train[name], validation=False)
@@ -63,14 +63,14 @@ class Experiment(fl.client.NumPyClient):
     def evaluate(self, parameters, config):
 
         return_dic = {}
-
-        fl_log.log("Model evaluation started", details="", object="experiment_evaluate" )
+        
+        self.log(f"Model evaluation started", details="", object="experiment_evaluate", object_id=self.id)
         
         self.model.set_parameters(parameters)
         
         values_metrics_validation = self.validation_loop(self.dataset.dataloader(validation = True))
 
-        fl_log.log("Model training finished", details="", object="experiment_evaluate" )
+        self.log("Model training finished", details="", object="experiment_evaluate" )
 
         for name in values_metrics_validation:
                 fl.measures(self, 'metrics.' + name, values_metrics_validation[name], validation=True)
