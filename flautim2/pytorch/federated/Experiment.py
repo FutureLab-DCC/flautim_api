@@ -20,6 +20,8 @@ class Experiment(fl.client.NumPyClient):
         self.epoch_fl = 0
         self.context = ExperimentContext(context)
 
+        self.log = context.log
+
         self.model.id = self.context.model
         self.dataset.id = self.context.dataset
 
@@ -40,7 +42,7 @@ class Experiment(fl.client.NumPyClient):
     def fit(self, parameters, config):
         return_dic = {}
         
-        fl_log.log("Model training started")
+        self.log(f"Model training started", details="", object="", object_id=self.id))
 
         self.model.set_parameters(parameters)
         
