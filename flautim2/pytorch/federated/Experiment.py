@@ -45,6 +45,8 @@ class Experiment(fl.client.NumPyClient):
         self.log(f"Model training started", details="", object="", object_id=self.id)
 
         self.model.set_parameters(parameters)
+
+        self.log(f"Config="+str(config["server_round"]), details="", object="", object_id=self.id)
         
         self.epoch_fl = config["server_round"]
 
