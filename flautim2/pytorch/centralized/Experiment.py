@@ -37,7 +37,7 @@ class Experiment(object):
         
     def fit(self, **kwargs):
 
-        self.context.log(f"Model training started", details="", object="", object_id=self.context.experiment.id))
+        fl.log(f"Model training started")
 
         for epochs in range(1, self.epochs+1):
             start_time = time.time()
