@@ -352,7 +352,7 @@ def run_federated(client_fn, server_fn, name_log = 'flower.log', post_processing
         client_app = ClientApp(client_fn=client_fn)
         server_app = ServerApp(server_fn=server_fn)
         
-        flwr.simulation.run_simulation(server_app=server_app, client_app=client_app, num_supernodes=num_clients)
+        fl.simulation.run_simulation(server_app=server_app, client_app=client_app, num_supernodes=num_clients)
 
         update_experiment_status(backend, experiment_id, "finished") 
 
