@@ -325,7 +325,7 @@ def run_federated(client_fn, server_fn, name_log = 'flower.log', post_processing
     path = ctx.path
     output_path = ctx.output_path
     num_clients = kwargs.get("num_clients", ctx.clients)
-    num_rounds = kwargs.get("num_rounds", ctx.rounds)
+    #num_rounds = kwargs.get("num_rounds", ctx.rounds)
     
     logger.log("Starting Flower Engine", details="", object="experiment_run", object_id=experiment_id )
 
@@ -340,8 +340,8 @@ def run_federated(client_fn, server_fn, name_log = 'flower.log', post_processing
     thread_schedulling.daemon = True
     thread_schedulling.start()
 
-    fraction_fit = kwargs.get('fraction_fit', 1.)
-    fraction_evaluate  = kwargs.get('fraction_evaluate', 1.)
+    #fraction_fit = kwargs.get('fraction_fit', 1.)
+    #fraction_evaluate  = kwargs.get('fraction_evaluate', 1.)
 
     try:
 
