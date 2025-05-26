@@ -73,6 +73,8 @@ class Experiment(fl.client.NumPyClient):
 
         self.log("Model training finished", details="", object="experiment_evaluate" )
 
+        self.log(f"Mesure: "+ 'metrics.' + str(values_metrics_validation), details="", object="", object_id=self.id)
+
         for name in values_metrics_validation:
                 self.log(f"Mesure: "+ 'metrics.' + str(name) , details="", object="", object_id=self.id)
                 fl_log.measures(self, 'metrics.' + name, values_metrics_validation[name], validation=True)
