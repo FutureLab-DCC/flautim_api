@@ -324,7 +324,7 @@ def run_federated(client_fn, server_fn, name_log = 'flower.log', post_processing
     experiment_id = ctx.IDexperiment
     path = ctx.path
     output_path = ctx.output_path
-    num_clients = kwargs.get("num_clients", ctx.clients)
+    num_clients = 4 #kwargs.get("num_clients", ctx.clients)
     #num_rounds = kwargs.get("num_rounds", ctx.rounds)
     
     logger.log("Starting Flower Engine", details="", object="experiment_run", object_id=experiment_id )
@@ -346,9 +346,7 @@ def run_federated(client_fn, server_fn, name_log = 'flower.log', post_processing
     try:
 
         update_experiment_status(backend, experiment_id, "running")  
-    
-        client_resources = {"num_cpus": 1, "num_gpus": 0.75} 
-
+        
         client_app = ClientApp(client_fn=client_fn)
         server_app = ServerApp(server_fn=server_fn)
         
