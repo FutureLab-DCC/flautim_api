@@ -32,7 +32,7 @@ class Experiment(fl.client.NumPyClient):
         try:
             self.context.status(stat)
         except Exception as ex:
-            fl_log.log("Error while updating status", details=str(ex), object="experiment_fit")
+            self.log("Error while updating status", details=str(ex), object="experiment_fit")
 
     def set_parameters(self, parameters):
         self.model.set_parameters(parameters)
@@ -54,7 +54,7 @@ class Experiment(fl.client.NumPyClient):
         self.log(f"Model training finished", details="", object="", object_id=self.id)
 
         for name in values_metrics_train:
-                self.log(f"Mesure: "+ 'metrics.' + str(name), details="", object="", object_id=self.id)
+                #self.log(f"Mesure: "+ 'metrics.' + str(name), details="", object="", object_id=self.id)
                 self.measures.log(self, 'metrics.' + name, values_metrics_train[name], validation=False)
                 return_dic[name] = float(values_metrics_train[name])
 
@@ -77,7 +77,7 @@ class Experiment(fl.client.NumPyClient):
         self.log(f"Mesure: "+ 'metrics.' + str(values_metrics_validation), details="", object="", object_id=self.id)
 
         for name in values_metrics_validation:
-                self.log(f"Mesure: "+ 'metrics.' + str(name) , details="", object="", object_id=self.id)
+                #self.log(f"Mesure: "+ 'metrics.' + str(name) , details="", object="", object_id=self.id)
                 self.measures.log(self, 'metrics.' + name, values_metrics_validation[name], validation=True)
                 return_dic[name] = float(values_metrics_validation[name])
         
