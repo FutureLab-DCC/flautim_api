@@ -303,7 +303,9 @@ def weighted_average(metrics) :
     return weighted_metrics
 
 
-def run_federated(client_fn, server_fn, name_log = 'flower.log', post_processing_fn = [], **kwargs):
+def run_federated(client_fn, server_fn, metrics, name_log = 'flower.log', post_processing_fn = [], **kwargs):
+
+    self.metrics = Config(metrics)
 
     logging.basicConfig(filename=name_log,
                     filemode='w',  # 'a' para append, 'w' para sobrescrever
