@@ -70,7 +70,7 @@ class Experiment(fl.client.NumPyClient):
         
         self.model.set_parameters(parameters)
         
-        values_metrics_validation = self.validation_loop(self.dataset.dataloader(validation = True))
+        loss, values_metrics_validation = self.validation_loop(self.dataset.dataloader(validation = True))
 
         self.log("Model training finished", details="", object="experiment_evaluate" )
 
