@@ -21,7 +21,7 @@ class Experiment(fl.client.NumPyClient):
         self.context = ExperimentContext(context)
 
         self.log = context.logger.log
-        self.measures = context.measures.log
+        self.measures = context.measures
 
         self.model.id = self.context.model
         self.dataset.id = self.context.dataset
