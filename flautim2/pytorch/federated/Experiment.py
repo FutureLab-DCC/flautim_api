@@ -21,6 +21,7 @@ class Experiment(fl.client.NumPyClient):
         self.context = ExperimentContext(context)
 
         self.log = context.logger.log
+        self.measures = context.measures.log
 
         self.model.id = self.context.model
         self.dataset.id = self.context.dataset
@@ -54,7 +55,7 @@ class Experiment(fl.client.NumPyClient):
 
         for name in values_metrics_train:
                 self.log(f"Mesure: "+ 'metrics.' + str(name), details="", object="", object_id=self.id)
-                fl_log.measures(self, 'metrics.' + name, values_metrics_train[name], validation=False)
+                self.measures.log(self, 'metrics.' + name, values_metrics_train[name], validation=False)
                 return_dic[name] = float(values_metrics_train[name])
 
         self.model.save()
@@ -77,7 +78,7 @@ class Experiment(fl.client.NumPyClient):
 
         for name in values_metrics_validation:
                 self.log(f"Mesure: "+ 'metrics.' + str(name) , details="", object="", object_id=self.id)
-                fl_log.measures(self, 'metrics.' + name, values_metrics_validation[name], validation=True)
+                self.measures.log(self, 'metrics.' + name, values_metrics_validation[name], validation=True)
                 return_dic[name] = float(values_metrics_validation[name])
         
         self.model.save()
