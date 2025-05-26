@@ -47,7 +47,7 @@ class Experiment(fl.client.NumPyClient):
 
         self.model.set_parameters(parameters)
 
-        self.epoch_fl = 22
+        self.epoch_fl = config["server_round"]
 
         values_metrics_train = self.training_loop(self.dataset.dataloader())
 
