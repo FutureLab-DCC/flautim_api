@@ -325,7 +325,7 @@ def run_federated(client_fn, server_fn, name_log = 'flower.log', post_processing
     path = ctx.path
     output_path = ctx.output_path
     num_clients = 4 #kwargs.get("num_clients", ctx.clients)
-    #num_rounds = kwargs.get("num_rounds", ctx.rounds)
+    num_rounds = 15 #kwargs.get("num_rounds", ctx.rounds)
     
     logger.log("Starting Flower Engine", details="", object="experiment_run", object_id=experiment_id )
 
