@@ -253,6 +253,7 @@ def run_centralized(experiment, name_log = 'centralized.log', post_processing_fn
     epochs = ctx.epochs
 
     logger.log("Starting Centralized Training", details="", object="experiment_run", object_id=experiment_id )
+    logger.log(get_pod_log_info(), details="", object="experiment_run", object_id=experiment_id )
 
     def schedule_file_logging():
         schedule.every(2).seconds.do(backend.write_experiment_results_callback('./centralized.log', experiment_id)) 
