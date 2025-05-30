@@ -57,7 +57,7 @@ def get_pod_log_info() -> str:
     lines = [f"│ {line}" for line in info]
     width = max(len(line) for line in lines)
     header = " MACHINE SETTINGS "
-    box_top = f"┌{'─' * (width)}┐"
+    box_top = "\n"+f"┌{'─' * (width)}┐"
     title_line = f"│{header.center(width)}│"
     box_bottom = f"└{'─' * (width)}┘"
 
