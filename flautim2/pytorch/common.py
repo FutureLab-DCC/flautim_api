@@ -16,6 +16,45 @@ from flwr.server import ServerApp
 
 from flwr.client import ClientApp
 
+import platform
+import psutil
+import subprocess
+
+def get_pod_log_info() -> str:
+    info = []
+
+    # OS and Python info
+    info.append(f"OS: {platform.system()} {platform.release()}")
+    info.append(f"Python Version: {platform.python_version()}")
+    info.append(f"Machine: {platform.machine()}")
+    info.append(f"Hostname: {platform.node()}")
+
+    # CPU info
+    cpu_count = psutil.cpu_count(logical=True)
+    cpu_freq = psutil.cpu_freq()
+    info.append(f"CPU Cores: {cpu_count}")
+    if cpu_freq:
+        info.append(f"CPU Frequency: {cpu_freq.current:.2f} MHz")
+
+    # Memory info
+    mem = psutil.virtual_memory()
+    info.append(f"Memory: {mem.total / (1024**3):.2f} GB")
+
+    # GPU info using nvidia-smi (if available)
+    try:
+        result = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name,memory.total,driver_version", "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, check=True
+        )
+        gpus = result.stdout.strip().split("\n")
+        for idx, gpu in enumerate(gpus):
+            name, mem_total, driver = map(str.strip, gpu.split(','))
+            info.append(f"GPU {idx}: {name}, Memory: {mem_total} MB, Driver: {driver}")
+    except Exception:
+        info.append("GPU Info: Not available or nvidia-smi not installed")
+
+    return "\n".join(info)
+
 class Backend(object):
     def __init__(self, **kwargs):
         super().__init__()
@@ -330,6 +369,7 @@ def run_federated(client_fn, server_fn, name_log = 'flower.log', post_processing
     num_rounds = 15 #kwargs.get("num_rounds", ctx.rounds)
     
     logger.log("Starting Flower Engine", details="", object="experiment_run", object_id=experiment_id )
+    logger.log(get_pod_log_info(), details="", object="experiment_run", object_id=experiment_id )
 
     def schedule_file_logging():
         schedule.every(2).seconds.do(backend.write_experiment_results_callback('./flower.log', experiment_id)) 
