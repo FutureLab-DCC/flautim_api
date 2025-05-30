@@ -53,7 +53,16 @@ def get_pod_log_info() -> str:
     except Exception:
         info.append("GPU Info: Not available or nvidia-smi not installed")
 
-    return "\n".join(info)
+    # Format the info in a box
+    lines = [f"│ {line}" for line in info]
+    width = max(len(line) for line in lines)
+    header = " MACHINE SETTINGS "
+    box_top = f"┌{'─' * (width)}┐"
+    title_line = f"│{header.center(width)}│"
+    box_bottom = f"└{'─' * (width)}┘"
+
+    return "\n".join([box_top, title_line] + lines + [box_bottom])
+
 
 class Backend(object):
     def __init__(self, **kwargs):
