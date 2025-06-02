@@ -22,7 +22,11 @@ def init():
     global _init_instance
     _init_instance = Init()
 
-    config_file = read_config()
+    config_file = {
+        "db": read_config("db"),
+        "experiment": read_config("experiment"),
+        "filesystem": read_config("filesystem")
+    }
 
     context = Config(config_file)
 
