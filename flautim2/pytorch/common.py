@@ -151,25 +151,25 @@ class Measures(object):
         self.backend.write_db(data, collection = 'measures')
 
 
-class metrics(Enum):
-     MSE = 1
-     RMSE = 2
-     NRMSE = 3
-     MAE = 4
-     MAPE = 5
-     SMAPE = 6
-     MDE = 7
-     R2 = 8
-     ACCURACY = 9
-     PRECISION = 10
-     RECALL = 11
-     F1SCORE = 12
-     AUC = 13
-     CROSSENTROPY = 14
-     TIME = 15,
-     OTHER1 = 16,
-     OTHER2 = 17,
-     OTHER3 = 18
+# class metrics(Enum):
+#      MSE = 1
+#      RMSE = 2
+#      NRMSE = 3
+#      MAE = 4
+#      MAPE = 5
+#      SMAPE = 6
+#      MDE = 7
+#      R2 = 8
+#      ACCURACY = 9
+#      PRECISION = 10
+#      RECALL = 11
+#      F1SCORE = 12
+#      AUC = 13
+#      CROSSENTROPY = 14
+#      TIME = 15,
+#      OTHER1 = 16,
+#      OTHER2 = 17,
+#      OTHER3 = 18
      
 
 class ExperimentStatus(str, Enum):
@@ -230,59 +230,59 @@ def fit_config(server_round: int):
     return config
 
     
-def run_centralized(experiment, name_log = 'centralized.log', post_processing_fn = [], **kwargs):
+# def run_centralized(experiment, name_log = 'centralized.log', post_processing_fn = [], **kwargs):
 
-    logging.basicConfig(filename=name_log,
-                    filemode='w',  # 'a' para append, 'w' para sobrescrever
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+#     logging.basicConfig(filename=name_log,
+#                     filemode='w',  # 'a' para append, 'w' para sobrescrever
+#                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#                     level=logging.INFO)
     
-    root = logging.getLogger()
-    root.setLevel(logging.INFO)
+#     root = logging.getLogger()
+#     root.setLevel(logging.INFO)
     
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+#     console_handler = logging.StreamHandler()
+#     console_handler.setLevel(logging.INFO)
+#     console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 
-    root.addHandler(console_handler)
+#     root.addHandler(console_handler)
 
-    _, ctx, backend, logger, _ = get_argparser()
-    experiment_id = ctx.IDexperiment
-    path = ctx.path
-    output_path = ctx.output_path
-    epochs = ctx.epochs
+#     _, ctx, backend, logger, _ = get_argparser()
+#     experiment_id = ctx.IDexperiment
+#     path = ctx.path
+#     output_path = ctx.output_path
+#     epochs = ctx.epochs
 
-    logger.log("Starting Centralized Training", details="", object="experiment_run", object_id=experiment_id )
-    logger.log(get_pod_log_info(), details="", object="experiment_run", object_id=experiment_id )
+#     logger.log("Starting Centralized Training", details="", object="experiment_run", object_id=experiment_id )
+#     logger.log(get_pod_log_info(), details="", object="experiment_run", object_id=experiment_id )
 
-    def schedule_file_logging():
-        schedule.every(2).seconds.do(backend.write_experiment_results_callback('./centralized.log', experiment_id)) 
+#     def schedule_file_logging():
+#         schedule.every(2).seconds.do(backend.write_experiment_results_callback('./centralized.log', experiment_id)) 
     
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
+#         while True:
+#             schedule.run_pending()
+#             time.sleep(1)
 
-    thread_schedulling = threading.Thread(target=schedule_file_logging)
-    thread_schedulling.daemon = True
-    thread_schedulling.start()
+#     thread_schedulling = threading.Thread(target=schedule_file_logging)
+#     thread_schedulling.daemon = True
+#     thread_schedulling.start()
 
-    try:
-        update_experiment_status(backend, experiment_id, "running")  
+#     try:
+#         update_experiment_status(backend, experiment_id, "running")  
 
-        experiment.fit()
+#         experiment.fit()
     
-        update_experiment_status(backend, experiment_id, "finished") 
+#         update_experiment_status(backend, experiment_id, "finished") 
 
-        copy_model_wights(path, output_path, experiment_id, logger) 
+#         copy_model_wights(path, output_path, experiment_id, logger) 
 
-        logger.log("Finishing Centralized Training", details="", object="experiment_run", object_id=experiment_id )
-    except Exception as ex:
-        update_experiment_status(backend, experiment_id, "error")  
-        logger.log("Error during Centralized Training", details=str(ex), object="experiment_run", object_id=experiment_id )
-        logger.log("Stacktrace of Error during Centralized Training", details=traceback.format_exc(), object="experiment_run", object_id=experiment_id )
+#         logger.log("Finishing Centralized Training", details="", object="experiment_run", object_id=experiment_id )
+#     except Exception as ex:
+#         update_experiment_status(backend, experiment_id, "error")  
+#         logger.log("Error during Centralized Training", details=str(ex), object="experiment_run", object_id=experiment_id )
+#         logger.log("Stacktrace of Error during Centralized Training", details=traceback.format_exc(), object="experiment_run", object_id=experiment_id )
         
     
-    backend.write_experiment_results('./centralized.log', experiment_id)
+#     backend.write_experiment_results('./centralized.log', experiment_id)
 
 
 class CustomFedAvg(fl.server.strategy.FedAvg):
@@ -418,28 +418,28 @@ def run_federated(client_fn, server_fn, name_log = 'flower.log', post_processing
     
     backend.write_experiment_results('./flower.log', experiment_id)
 
-def get_argparser():
-    parser = argparse.ArgumentParser()
+# def get_argparser():
+#     parser = argparse.ArgumentParser()
     
-    parser.add_argument("--user", type=str, required=True)
-    parser.add_argument("--path", type=str, required=True)
-    parser.add_argument("--output-path", type=str, required=True)
-    parser.add_argument("--dbserver", type=str, required=False, default="127.0.0.1")
-    parser.add_argument("--dbport", type=str, required=False, default="27017")
-    parser.add_argument("--dbuser", type=str, required=True)
-    parser.add_argument("--dbpw", type=str, required=True)
-    parser.add_argument("--clients", type=int, required=False, default=3)
-    parser.add_argument("--rounds", type=int, required=False, default=10)
-    parser.add_argument("--epochs", type=int, required=False, default=10)
-    parser.add_argument("--IDexperiment", type=str, required=True, default=0)
-    ctx = parser.parse_args()
+#     parser.add_argument("--user", type=str, required=True)
+#     parser.add_argument("--path", type=str, required=True)
+#     parser.add_argument("--output-path", type=str, required=True)
+#     parser.add_argument("--dbserver", type=str, required=False, default="127.0.0.1")
+#     parser.add_argument("--dbport", type=str, required=False, default="27017")
+#     parser.add_argument("--dbuser", type=str, required=True)
+#     parser.add_argument("--dbpw", type=str, required=True)
+#     parser.add_argument("--clients", type=int, required=False, default=3)
+#     parser.add_argument("--rounds", type=int, required=False, default=10)
+#     parser.add_argument("--epochs", type=int, required=False, default=10)
+#     parser.add_argument("--IDexperiment", type=str, required=True, default=0)
+#     ctx = parser.parse_args()
     
-    backend = Backend(server = ctx.dbserver, port = ctx.dbport, user = ctx.dbuser, password=ctx.dbpw)
+#     backend = Backend(server = ctx.dbserver, port = ctx.dbport, user = ctx.dbuser, password=ctx.dbpw)
     
-    logger = Logger(backend, ctx)
-    measures = Measures(backend, ctx)
+#     logger = Logger(backend, ctx)
+#     measures = Measures(backend, ctx)
     
-    return parser, ctx, backend, logger, measures
+#     return parser, ctx, backend, logger, measures
 
 
 def update_experiment_status(backend, id, status):
