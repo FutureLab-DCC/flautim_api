@@ -10,7 +10,7 @@ class Init:
 _init_instance = None
 
 def read_config():
-        with open('/mnt/sigla/ZGacoXKh/config.yaml') as f:
+        with open('/mnt/sigla/ZGacoXKh/configs/config.yaml') as f:
             try: 
                 cfg = yaml.safe_load(f)
                 return cfg
