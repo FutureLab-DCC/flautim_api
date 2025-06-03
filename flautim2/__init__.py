@@ -24,27 +24,6 @@ def init():
 
     config = read_config()
 
-    # config_file = {
-    #     "db": read_config("db"),
-    #     "experiment": read_config("experiment"),
-    #     "filesystem": read_config("filesystem")
-    # }
-
-    # parser = argparse.ArgumentParser()
-    
-    # parser.add_argument("--user", type=str, required=True)
-    # parser.add_argument("--path", type=str, required=True)
-    # parser.add_argument("--output-path", type=str, required=True)
-    # parser.add_argument("--dbserver", type=str, required=False, default="127.0.0.1")
-    # parser.add_argument("--dbport", type=str, required=False, default="27017")
-    # parser.add_argument("--dbuser", type=str, required=True)
-    # parser.add_argument("--dbpw", type=str, required=True)
-    # parser.add_argument("--clients", type=int, required=False, default=3)
-    # parser.add_argument("--rounds", type=int, required=False, default=10)
-    # parser.add_argument("--epochs", type=int, required=False, default=10)
-    # parser.add_argument("--IDexperiment", type=str, required=True, default=0)
-    # ctx = parser.parse_args()
-
     config_file = {
         "db": {
             'dbserver': config['db_server'],
