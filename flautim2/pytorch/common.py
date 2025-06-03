@@ -418,28 +418,28 @@ def run_federated(client_fn, server_fn, name_log = 'flower.log', post_processing
     
     backend.write_experiment_results('./flower.log', experiment_id)
 
-# def get_argparser():
-#     parser = argparse.ArgumentParser()
+def get_argparser():
+    parser = argparse.ArgumentParser()
     
-#     parser.add_argument("--user", type=str, required=True)
-#     parser.add_argument("--path", type=str, required=True)
-#     parser.add_argument("--output-path", type=str, required=True)
-#     parser.add_argument("--dbserver", type=str, required=False, default="127.0.0.1")
-#     parser.add_argument("--dbport", type=str, required=False, default="27017")
-#     parser.add_argument("--dbuser", type=str, required=True)
-#     parser.add_argument("--dbpw", type=str, required=True)
-#     parser.add_argument("--clients", type=int, required=False, default=3)
-#     parser.add_argument("--rounds", type=int, required=False, default=10)
-#     parser.add_argument("--epochs", type=int, required=False, default=10)
-#     parser.add_argument("--IDexperiment", type=str, required=True, default=0)
-#     ctx = parser.parse_args()
+    parser.add_argument("--user", type=str, required=True)
+    parser.add_argument("--path", type=str, required=True)
+    parser.add_argument("--output-path", type=str, required=True)
+    parser.add_argument("--dbserver", type=str, required=False, default="127.0.0.1")
+    parser.add_argument("--dbport", type=str, required=False, default="27017")
+    parser.add_argument("--dbuser", type=str, required=True)
+    parser.add_argument("--dbpw", type=str, required=True)
+    parser.add_argument("--clients", type=int, required=False, default=3)
+    parser.add_argument("--rounds", type=int, required=False, default=10)
+    parser.add_argument("--epochs", type=int, required=False, default=10)
+    parser.add_argument("--IDexperiment", type=str, required=True, default=0)
+    ctx = parser.parse_args()
     
-#     backend = Backend(server = ctx.dbserver, port = ctx.dbport, user = ctx.dbuser, password=ctx.dbpw)
+    backend = Backend(server = ctx.dbserver, port = ctx.dbport, user = ctx.dbuser, password=ctx.dbpw)
     
-#     logger = Logger(backend, ctx)
-#     measures = Measures(backend, ctx)
+    logger = Logger(backend, ctx)
+    measures = Measures(backend, ctx)
     
-#     return parser, ctx, backend, logger, measures
+    return parser, ctx, backend, logger, measures
 
 
 def update_experiment_status(backend, id, status):
