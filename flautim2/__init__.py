@@ -33,6 +33,8 @@ def init():
         },
         "experiment": {
             "id": config['experiment_id'],
+            "name": config['job_name'],
+            "file":config['experiment_file']
         },
         "filesystem": {
             'user': config['user'],
