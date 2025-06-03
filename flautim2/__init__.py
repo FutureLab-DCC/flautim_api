@@ -56,6 +56,7 @@ def init():
             "id": config['experiment_id'],
         },
         "filesystem": {
+            'user': config['user'],
             'path': config['path'],
             'output_path': config['output_path'],
         }
