@@ -47,10 +47,10 @@ def init():
 
     config_file = {
         "db": {
-            'dbserver': config['dbserver'],
-            'dbport': config['dbport'],
-            'dbuser': config['dbuser'],
-            'dbpw': config['dbpw']
+            'dbserver': config['db_server'],
+            'dbport': config['db_port'],
+            'dbuser': config['db_user'],
+            'dbpw': config['db_pw']
         },
         "experiment": {
             "id": config['experiment_id'],
