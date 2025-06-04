@@ -33,7 +33,7 @@ def init():
         },
         "experiment": {
             "id": config['experiment_id'],
-            "name": config['job_name'],
+            "name": config['experiment_name'],
             "file":config['experiment_file']
         },
         "filesystem": {
