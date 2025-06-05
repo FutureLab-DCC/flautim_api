@@ -555,7 +555,7 @@ def run_federated_2(Dataset, Model, Experiment, context, files, name_log = 'flow
     print(f"Tipo de Experiment: {type(Experiment)}")
 
     client_fn = generate_client_fn(context, files, Model, Dataset, Experiment)
-    evaluate_fn_callback = evaluate_fn(context, files, Model, Experiment)
+    evaluate_fn_callback = evaluate_fn(context, files, Model, Experiment, Dataset)
     server_fn = generate_server_fn(context, evaluate_fn_callback, Model)
 
     logging.basicConfig(filename=name_log,
