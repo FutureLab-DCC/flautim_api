@@ -550,6 +550,10 @@ def run_federated_2(Dataset, Model, Experiment, context, files, name_log = 'flow
 
     #self.metrics = Config(metrics)
 
+    print(f"Tipo de Dataset: {type(Dataset)}")
+    print(f"Tipo de Model: {type(Model)}")
+    print(f"Tipo de Experiment: {type(Experiment)}")
+
     client_fn = generate_client_fn(context, files, Model, Dataset, Experiment)
     evaluate_fn = evaluate_fn(context, files, Model, Experiment)
     server_fn = generate_server_fn(context, evaluate_fn, Model)
