@@ -487,23 +487,23 @@ from flwr.common import Context, ndarrays_to_parameters
 from flwr.server import ServerConfig, ServerAppComponents
 
 
-def generate_server_fn(context, eval_fn, Model, **kwargs):
+def generate_server_fn(context, eval_fn, Model, strategy, num_rounds, **kwargs):
     
     def create_server_fn(context_flwr:  Context):
 
-        net = Model(context, suffix = 0)
-        params = ndarrays_to_parameters(net.get_parameters())
+        # net = Model(context, suffix = 0)
+        # params = ndarrays_to_parameters(net.get_parameters())
 
-        strategy = flwr.server.strategy.FedAvg(
-                          initial_parameters=params,
-                          evaluate_metrics_aggregation_fn=weighted_average,
-                          fraction_fit=0.2,  # 10% clients sampled each round to do fit()
-                          fraction_evaluate=0.5,  # 50% clients sample each round to do evaluate()
-                          evaluate_fn=eval_fn,
-                          on_fit_config_fn = fit_config,
-                          on_evaluate_config_fn = fit_config
-                          )
-        num_rounds = 150
+        # strategy = flwr.server.strategy.FedAvg(
+        #                   initial_parameters=params,
+        #                   evaluate_metrics_aggregation_fn=weighted_average,
+        #                   fraction_fit=0.2,  # 10% clients sampled each round to do fit()
+        #                   fraction_evaluate=0.5,  # 50% clients sample each round to do evaluate()
+        #                   evaluate_fn=eval_fn,
+        #                   on_fit_config_fn = fit_config,
+        #                   on_evaluate_config_fn = fit_config
+        #                   )
+        # num_rounds = 150
         config = ServerConfig(num_rounds=num_rounds)
 
         return ServerAppComponents(config=config, strategy=strategy)
@@ -546,17 +546,13 @@ def evaluate_fn(context, files, Model, Experiment, Dataset):
     return fn
 
 
-def run_federated_2(Dataset, Model, Experiment, context, files, name_log = 'flower.log', post_processing_fn = [], **kwargs):
+def run_federated_2(Dataset, Model, Experiment, context, files, strategy, num_rounds, name_log = 'flower.log', post_processing_fn = [], **kwargs):
 
     #self.metrics = Config(metrics)
 
-    print(f"Tipo de Dataset: {type(Dataset)}")
-    print(f"Tipo de Model: {type(Model)}")
-    print(f"Tipo de Experiment: {type(Experiment)}")
-
     client_fn = generate_client_fn(context, files, Model, Dataset, Experiment)
     evaluate_fn_callback = evaluate_fn(context, files, Model, Experiment, Dataset)
-    server_fn = generate_server_fn(context, evaluate_fn_callback, Model)
+    server_fn = generate_server_fn(context, evaluate_fn_callback, Model, strategy, num_rounds)
 
     logging.basicConfig(filename=name_log,
                     filemode='w',  # 'a' para append, 'w' para sobrescrever
