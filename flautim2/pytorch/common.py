@@ -2,7 +2,7 @@ import pymongo
 from datetime import datetime
 import argparse
 from enum import Enum
-import flwr as fl
+import flwr
 import os, threading, schedule, logging
 from typing import List, Tuple, Dict
 import numpy as np
@@ -285,7 +285,7 @@ def run_centralized(experiment, name_log = 'centralized.log', post_processing_fn
     backend.write_experiment_results('./centralized.log', experiment_id)
 
 
-class CustomFedAvg(fl.server.strategy.FedAvg):
+class CustomFedAvg(flwr.server.strategy.FedAvg):
 
     def aggregate_evaluate(
         self,
@@ -402,7 +402,7 @@ def run_federated(client_fn, server_fn, name_log = 'flower.log', post_processing
         client_app = ClientApp(client_fn=client_fn)
         server_app = ServerApp(server_fn=server_fn)
         
-        fl.simulation.run_simulation(server_app=server_app, client_app=client_app, 
+        flwr.simulation.run_simulation(server_app=server_app, client_app=client_app, 
                                      num_supernodes=num_clients,
                                      backend_config={"client_resources": {"num_cpus": 1, "num_gpus": 0.5}})
 
@@ -482,4 +482,137 @@ class Config(dict):
         self[name] = value
 
 
+#############################################################TESTES FEDERATED#############################################################
+from flwr.common import Context, ndarrays_to_parameters
+from flwr.server import ServerConfig, ServerAppComponents
+
+
+def generate_server_fn(context, eval_fn, Model, **kwargs):
+    
+    def create_server_fn(context_flwr:  Context):
+
+        net = Model(context, suffix = 0)
+        params = ndarrays_to_parameters(net.get_parameters())
+
+        strategy = flwr.server.strategy.FedAvg(
+                          initial_parameters=params,
+                          evaluate_metrics_aggregation_fn=weighted_average,
+                          fraction_fit=0.2,  # 10% clients sampled each round to do fit()
+                          fraction_evaluate=0.5,  # 50% clients sample each round to do evaluate()
+                          evaluate_fn=eval_fn,
+                          on_fit_config_fn = fit_config,
+                          on_evaluate_config_fn = fit_config
+                          )
+        num_rounds = 150
+        config = ServerConfig(num_rounds=num_rounds)
+
+        return ServerAppComponents(config=config, strategy=strategy)
+    return create_server_fn
+
+def generate_client_fn(context, files, Model, Dataset, Experiment):
+    
+    def create_client_fn(context_flwr:  Context):
+        
+        cid = int(context_flwr.node_config["partition-id"])
+        file = int(cid)
+        model = Model(context, suffix = cid)
+        dataset = Dataset(files[file], batch_size = 10, shuffle = False, num_workers = 0)
+        
+        return Experiment(model, dataset,  context).to_client() 
+        
+    return create_client_fn
+    
+
+def evaluate_fn(context, files, Model, Experiment, Dataset):
+    def fn(server_round, parameters, config):
+        """This function is executed by the strategy it will instantiate
+        a model and replace its parameters with those from the global model.
+        The, the model will be evaluate on the test set (recall this is the
+        whole MNIST test set)."""
+
+        model = Model(context, suffix = "FL-Global")
+        model.set_parameters(parameters)
+        
+        dataset = Dataset(files[0], batch_size = 10, shuffle = False, num_workers = 0)
+        
+        experiment = Experiment(model, dataset, context)
+        
+        config["server_round"] = server_round
+        
+        loss, _, return_dic = experiment.evaluate(parameters, config) 
+
+        return loss, return_dic
+
+    return fn
+
+
+def run_federated_2(Dataset, Model, Experiment, context, files, name_log = 'flower.log', post_processing_fn = [], **kwargs):
+
+    #self.metrics = Config(metrics)
+
+    client_fn = generate_client_fn(context, files, Model, Dataset, Experiment)
+    evaluate_fn = evaluate_fn(context, files, Model, Experiment)
+    server_fn = generate_server_fn(context, evaluate_fn, Model)
+
+    logging.basicConfig(filename=name_log,
+                    filemode='w',  # 'a' para append, 'w' para sobrescrever
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+
+
+    flower_logger = logging.getLogger('flwr')
+    flower_logger.setLevel(logging.INFO)  # Ajustar conforme necessário
+
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    flower_logger.addHandler(console_handler)
+
+    _, ctx, backend, logger, _ = get_argparser()
+    experiment_id = ctx.IDexperiment
+    path = ctx.path
+    output_path = ctx.output_path
+    num_clients = 4 #kwargs.get("num_clients", ctx.clients)
+    num_rounds = 15 #kwargs.get("num_rounds", ctx.rounds)
+    
+    logger.log("Starting Flower Engine", details="", object="experiment_run", object_id=experiment_id )
+    logger.log(get_pod_log_info(), details="", object="experiment_run", object_id=experiment_id )
+
+    def schedule_file_logging():
+        schedule.every(2).seconds.do(backend.write_experiment_results_callback('./flower.log', experiment_id)) 
+    
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+
+    thread_schedulling = threading.Thread(target=schedule_file_logging)
+    thread_schedulling.daemon = True
+    thread_schedulling.start()
+
+    #fraction_fit = kwargs.get('fraction_fit', 1.)
+    #fraction_evaluate  = kwargs.get('fraction_evaluate', 1.)
+
+    try:
+
+        update_experiment_status(backend, experiment_id, "running")  
+        
+        client_app = ClientApp(client_fn=client_fn)
+        server_app = ServerApp(server_fn=server_fn)
+        
+        flwr.simulation.run_simulation(server_app=server_app, client_app=client_app, 
+                                     num_supernodes=num_clients,
+                                     backend_config={"client_resources": {"num_cpus": 1, "num_gpus": 0.5}})
+
+        update_experiment_status(backend, experiment_id, "finished") 
+
+        copy_model_wights(path, output_path, experiment_id, logger) 
+
+        logger.log("Stopping Flower Engine", details="", object="experiment_run", object_id=experiment_id )
+    except Exception as ex:
+        update_experiment_status(backend, experiment_id, "error")  
+        logger.log("Error while running Flower", details=str(ex), object="experiment_run", object_id=experiment_id )
+        logger.log("Stacktrace of Error while running Flower", details=traceback.format_exc(), object="experiment_run", object_id=experiment_id )
+    
+    backend.write_experiment_results('./flower.log', experiment_id)
 
