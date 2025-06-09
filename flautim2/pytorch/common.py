@@ -551,9 +551,6 @@ def run_federated_2(Dataset, Model, Experiment, context, files, strategy, num_ro
     metrics['LOSS'] = None
     Experiment.metrics = Config(metrics)
 
-    logger.log("1 - " + Experiment.metrics, details="", object="experiment_run", object_id=experiment_id )
-    logger.log("2 - " + Config(metrics), details="", object="experiment_run", object_id=experiment_id )
-
     client_fn = generate_client_fn(context, files, Model, Dataset, Experiment)
     evaluate_fn_callback = evaluate_fn(context, files, Model, Experiment, Dataset)
     server_fn = generate_server_fn(context, evaluate_fn_callback, Model, strategy, num_rounds)
@@ -580,6 +577,9 @@ def run_federated_2(Dataset, Model, Experiment, context, files, strategy, num_ro
     
     logger.log("Starting Flower Engine", details="", object="experiment_run", object_id=experiment_id )
     logger.log(get_pod_log_info(), details="", object="experiment_run", object_id=experiment_id )
+
+    logger.log("1 - " + Experiment.metrics, details="", object="experiment_run", object_id=experiment_id )
+    logger.log("2 - " + Config(metrics), details="", object="experiment_run", object_id=experiment_id )
 
     def schedule_file_logging():
         schedule.every(2).seconds.do(backend.write_experiment_results_callback('./flower.log', experiment_id)) 
