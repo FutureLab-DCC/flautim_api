@@ -95,6 +95,8 @@ class Experiment(object):
 
         root.addHandler(console_handler)
 
+        fl.log(common.get_pod_log_info())
+
         fl.log(f"Starting Centralized Training")
 
         def schedule_file_logging():
