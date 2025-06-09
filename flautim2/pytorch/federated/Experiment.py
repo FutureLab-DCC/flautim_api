@@ -6,7 +6,7 @@ import os
 import flwr as fl
 import flautim2 as fl_log
 from flautim2.pytorch import Model
-from flautim2.pytorch.common import ExperimentContext, ExperimentStatus
+from flautim2.pytorch.common import ExperimentContext, ExperimentStatus, generate_client_fn, evaluate_fn, generate_server_fn
 
 from flautim2.pytorch.common import metrics
 
@@ -94,4 +94,77 @@ class Experiment(fl.client.NumPyClient):
 
     def validation_loop(self, data_loader):
         raise NotImplementedError("The validation_loop method should be implemented!")
+
+
+    def run_federated(self, Dataset, Model, context, files, strategy, num_rounds, metrics, num_clients = 4, name_log = 'flower.log', post_processing_fn = [], **kwargs):
+
+        metrics['LOSS'] = None
+        self.metrics = Config(metrics)
     
+        client_fn = generate_client_fn(context, files, Model, Dataset, self)
+        evaluate_fn_callback = evaluate_fn(context, files, Model, self, Dataset)
+        server_fn = generate_server_fn(context, evaluate_fn_callback, Model, strategy, num_rounds)
+    
+        logging.basicConfig(filename=name_log,
+                        filemode='w',  # 'a' para append, 'w' para sobrescrever
+                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                        level=logging.INFO)
+    
+    
+        flower_logger = logging.getLogger('flwr')
+        flower_logger.setLevel(logging.INFO)  # Ajustar conforme necessário
+    
+    
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+        console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        flower_logger.addHandler(console_handler)
+    
+        #_, ctx, backend, logger, _ = get_argparser()
+        experiment_id = self.id
+        path = self.context.filesystem.path
+        output_path = self.context.filesystem.output_path
+        
+        fl_log.log("Starting Flower Engine", details="", object="experiment_run", object_id=experiment_id )
+        fl_log.log(get_pod_log_info(), details="", object="experiment_run", object_id=experiment_id )
+    
+        fl_log.log("1 - " + str(self.metrics), details="", object="experiment_run", object_id=experiment_id )
+        fl_log.log("2 - " + str(Config(metrics)), details="", object="experiment_run", object_id=experiment_id )
+    
+        def schedule_file_logging():
+            schedule.every(2).seconds.do(self.context.backend..write_experiment_results_callback('./flower.log', experiment_id)) 
+        
+            while True:
+                schedule.run_pending()
+                time.sleep(1)
+    
+        thread_schedulling = threading.Thread(target=schedule_file_logging)
+        thread_schedulling.daemon = True
+        thread_schedulling.start()
+    
+        #fraction_fit = kwargs.get('fraction_fit', 1.)
+        #fraction_evaluate  = kwargs.get('fraction_evaluate', 1.)
+    
+        try:
+    
+            update_experiment_status(self.context.backend, experiment_id, "running")  
+            
+            client_app = ClientApp(client_fn=client_fn)
+            server_app = ServerApp(server_fn=server_fn)
+            
+            flwr.simulation.run_simulation(server_app=server_app, client_app=client_app, 
+                                         num_supernodes=num_clients,
+                                         backend_config={"client_resources": {"num_cpus": 1, "num_gpus": 0.5}})
+    
+            update_experiment_status(self.context.backend., experiment_id, "finished") 
+    
+            copy_model_wights(path, output_path, experiment_id, self.context.logger) 
+    
+            fl_log.log("Stopping Flower Engine", details="", object="experiment_run", object_id=experiment_id )
+        except Exception as ex:
+            update_experiment_status(self.context.backend, experiment_id, "error")  
+            fl_log.log("Error while running Flower", details=str(ex), object="experiment_run", object_id=experiment_id )
+            fl_log.log("Stacktrace of Error while running Flower", details=traceback.format_exc(), object="experiment_run", object_id=experiment_id )
+        
+        self.context.backend.write_experiment_results('./flower.log', experiment_id)
+        
