@@ -546,9 +546,10 @@ def evaluate_fn(context, files, Model, Experiment, Dataset):
     return fn
 
 
-def run_federated_2(Dataset, Model, Experiment, context, files, strategy, num_rounds, name_log = 'flower.log', post_processing_fn = [], **kwargs):
+def run_federated_2(Dataset, Model, Experiment, context, files, strategy, num_rounds, metrics, num_clients = 4, name_log = 'flower.log', post_processing_fn = [], **kwargs):
 
-    #self.metrics = Config(metrics)
+    metrics['LOSS'] = None
+    Experiment.metrics = Config(metrics)
 
     client_fn = generate_client_fn(context, files, Model, Dataset, Experiment)
     evaluate_fn_callback = evaluate_fn(context, files, Model, Experiment, Dataset)
@@ -573,8 +574,6 @@ def run_federated_2(Dataset, Model, Experiment, context, files, strategy, num_ro
     experiment_id = ctx.IDexperiment
     path = ctx.path
     output_path = ctx.output_path
-    num_clients = 4 #kwargs.get("num_clients", ctx.clients)
-    num_rounds = 15 #kwargs.get("num_rounds", ctx.rounds)
     
     logger.log("Starting Flower Engine", details="", object="experiment_run", object_id=experiment_id )
     logger.log(get_pod_log_info(), details="", object="experiment_run", object_id=experiment_id )
