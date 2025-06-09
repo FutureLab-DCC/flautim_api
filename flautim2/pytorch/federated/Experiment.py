@@ -132,7 +132,7 @@ class Experiment(fl.client.NumPyClient):
         fl_log.log("2 - " + str(Config(metrics)), details="", object="experiment_run", object_id=experiment_id )
     
         def schedule_file_logging():
-            schedule.every(2).seconds.do(self.context.backend..write_experiment_results_callback('./flower.log', experiment_id)) 
+            schedule.every(2).seconds.do(self.context.backend.write_experiment_results_callback('./flower.log', experiment_id)) 
         
             while True:
                 schedule.run_pending()
@@ -156,7 +156,7 @@ class Experiment(fl.client.NumPyClient):
                                          num_supernodes=num_clients,
                                          backend_config={"client_resources": {"num_cpus": 1, "num_gpus": 0.5}})
     
-            update_experiment_status(self.context.backend., experiment_id, "finished") 
+            update_experiment_status(self.context.backend, experiment_id, "finished") 
     
             copy_model_wights(path, output_path, experiment_id, self.context.logger) 
     
