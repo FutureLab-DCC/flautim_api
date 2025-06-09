@@ -20,6 +20,8 @@ class Experiment(fl.client.NumPyClient):
         self.epoch_fl = 0
         self.context = ExperimentContext(context)
 
+        self.metrics = None
+
         self.log = context.logger.log
         self.measures = context.measures
 
