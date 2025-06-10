@@ -49,7 +49,7 @@ class Experiment(object):
                 f'Time: {elapsed_time:.2f} seconds')
             
             for name in values_metrics_train:
-                fl.measures(self, 'metrics.' + name, values_metrics_train[name], validation=False)
+                fl.measures(self, name, values_metrics_train[name], validation=False)
 
         fl.log("Model training finished")
 
@@ -62,7 +62,7 @@ class Experiment(object):
         values_metrics_validation = self.validation_loop(self.dataset.dataloader(validation = True))
 
         for name in values_metrics_validation:
-                fl.measures(self, 'metrics.' + name, values_metrics_validation[name], validation=True)
+                fl.measures(self, name, values_metrics_validation[name], validation=True)
 
         fl.log("Model evaluate finished")
 
