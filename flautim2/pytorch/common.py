@@ -149,29 +149,7 @@ class Measures(object):
         data.update(append)
         
         self.backend.write_db(data, collection = 'measures')
-
-
-class metrics(Enum):
-     MSE = 1
-     RMSE = 2
-     NRMSE = 3
-     MAE = 4
-     MAPE = 5
-     SMAPE = 6
-     MDE = 7
-     R2 = 8
-     ACCURACY = 9
-     PRECISION = 10
-     RECALL = 11
-     F1SCORE = 12
-     AUC = 13
-     CROSSENTROPY = 14
-     TIME = 15,
-     OTHER1 = 16,
-     OTHER2 = 17,
-     OTHER3 = 18
      
-
 class ExperimentStatus(str, Enum):
     PENDING = "pending"
     RUNNING = "running"
@@ -228,61 +206,6 @@ def fit_config(server_round: int):
         "server_round": server_round,  # The current round of federated learning
     }
     return config
-
-    
-def run_centralized(experiment, name_log = 'centralized.log', post_processing_fn = [], **kwargs):
-
-    logging.basicConfig(filename=name_log,
-                    filemode='w',  # 'a' para append, 'w' para sobrescrever
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-    
-    root = logging.getLogger()
-    root.setLevel(logging.INFO)
-    
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-
-    root.addHandler(console_handler)
-
-    _, ctx, backend, logger, _ = get_argparser()
-    experiment_id = ctx.IDexperiment
-    path = ctx.path
-    output_path = ctx.output_path
-    epochs = ctx.epochs
-
-    logger.log("Starting Centralized Training", details="", object="experiment_run", object_id=experiment_id )
-    logger.log(get_pod_log_info(), details="", object="experiment_run", object_id=experiment_id )
-
-    def schedule_file_logging():
-        schedule.every(2).seconds.do(backend.write_experiment_results_callback('./centralized.log', experiment_id)) 
-    
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
-
-    thread_schedulling = threading.Thread(target=schedule_file_logging)
-    thread_schedulling.daemon = True
-    thread_schedulling.start()
-
-    try:
-        update_experiment_status(backend, experiment_id, "running")  
-
-        experiment.fit()
-    
-        update_experiment_status(backend, experiment_id, "finished") 
-
-        copy_model_wights(path, output_path, experiment_id, logger) 
-
-        logger.log("Finishing Centralized Training", details="", object="experiment_run", object_id=experiment_id )
-    except Exception as ex:
-        update_experiment_status(backend, experiment_id, "error")  
-        logger.log("Error during Centralized Training", details=str(ex), object="experiment_run", object_id=experiment_id )
-        logger.log("Stacktrace of Error during Centralized Training", details=traceback.format_exc(), object="experiment_run", object_id=experiment_id )
-        
-    
-    backend.write_experiment_results('./centralized.log', experiment_id)
 
 
 class CustomFedAvg(flwr.server.strategy.FedAvg):
@@ -418,29 +341,6 @@ def run_federated(client_fn, server_fn, name_log = 'flower.log', post_processing
     
     backend.write_experiment_results('./flower.log', experiment_id)
 
-def get_argparser():
-    parser = argparse.ArgumentParser()
-    
-    parser.add_argument("--user", type=str, required=True)
-    parser.add_argument("--path", type=str, required=True)
-    parser.add_argument("--output-path", type=str, required=True)
-    parser.add_argument("--dbserver", type=str, required=False, default="127.0.0.1")
-    parser.add_argument("--dbport", type=str, required=False, default="27017")
-    parser.add_argument("--dbuser", type=str, required=True)
-    parser.add_argument("--dbpw", type=str, required=True)
-    parser.add_argument("--clients", type=int, required=False, default=3)
-    parser.add_argument("--rounds", type=int, required=False, default=10)
-    parser.add_argument("--epochs", type=int, required=False, default=10)
-    parser.add_argument("--IDexperiment", type=str, required=True, default=0)
-    ctx = parser.parse_args()
-    
-    backend = Backend(server = ctx.dbserver, port = ctx.dbport, user = ctx.dbuser, password=ctx.dbpw)
-    
-    logger = Logger(backend, ctx)
-    measures = Measures(backend, ctx)
-    
-    return parser, ctx, backend, logger, measures
-
 
 def update_experiment_status(backend, id, status):
     filter = { '_id': id }
@@ -482,139 +382,5 @@ class Config(dict):
         self[name] = value
 
 
-#############################################################TESTES FEDERATED#############################################################
-from flwr.common import Context, ndarrays_to_parameters
-from flwr.server import ServerConfig, ServerAppComponents
 
-
-def generate_server_fn(context, eval_fn, Model, strategy, num_rounds, **kwargs):
-    
-    def create_server_fn(context_flwr:  Context):
-
-        # net = Model(context, suffix = 0)
-        # params = ndarrays_to_parameters(net.get_parameters())
-
-        # strategy = flwr.server.strategy.FedAvg(
-        #                   initial_parameters=params,
-        #                   evaluate_metrics_aggregation_fn=weighted_average,
-        #                   fraction_fit=0.2,  # 10% clients sampled each round to do fit()
-        #                   fraction_evaluate=0.5,  # 50% clients sample each round to do evaluate()
-        #                   evaluate_fn=eval_fn,
-        #                   on_fit_config_fn = fit_config,
-        #                   on_evaluate_config_fn = fit_config
-        #                   )
-        # num_rounds = 150
-        config = ServerConfig(num_rounds=num_rounds)
-
-        return ServerAppComponents(config=config, strategy=strategy)
-    return create_server_fn
-
-def generate_client_fn(context, files, Model, Dataset, Experiment):
-    
-    def create_client_fn(context_flwr:  Context):
-        
-        cid = int(context_flwr.node_config["partition-id"])
-        file = int(cid)
-        model = Model(context, suffix = cid)
-        dataset = Dataset(files[file], batch_size = 10, shuffle = False, num_workers = 0)
-        
-        return Experiment(model, dataset,  context).to_client() 
-        
-    return create_client_fn
-    
-
-def evaluate_fn(context, files, Model, Experiment, Dataset):
-    def fn(server_round, parameters, config):
-        """This function is executed by the strategy it will instantiate
-        a model and replace its parameters with those from the global model.
-        The, the model will be evaluate on the test set (recall this is the
-        whole MNIST test set)."""
-
-        model = Model(context, suffix = "FL-Global")
-        model.set_parameters(parameters)
-        
-        dataset = Dataset(files[0], batch_size = 10, shuffle = False, num_workers = 0)
-        
-        experiment = Experiment(model, dataset, context)
-        
-        config["server_round"] = server_round
-        
-        loss, _, return_dic = experiment.evaluate(parameters, config) 
-
-        return loss, return_dic
-
-    return fn
-
-
-def run_federated_2(Dataset, Model, Experiment, context, files, strategy, num_rounds, metrics, num_clients = 4, name_log = 'flower.log', post_processing_fn = [], **kwargs):
-
-    metrics['LOSS'] = None
-    Experiment.metrics = Config(metrics)
-
-    client_fn = generate_client_fn(context, files, Model, Dataset, Experiment)
-    evaluate_fn_callback = evaluate_fn(context, files, Model, Experiment, Dataset)
-    server_fn = generate_server_fn(context, evaluate_fn_callback, Model, strategy, num_rounds)
-
-    logging.basicConfig(filename=name_log,
-                    filemode='w',  # 'a' para append, 'w' para sobrescrever
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-
-
-    flower_logger = logging.getLogger('flwr')
-    flower_logger.setLevel(logging.INFO)  # Ajustar conforme necessário
-
-
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-    flower_logger.addHandler(console_handler)
-
-    _, ctx, backend, logger, _ = get_argparser()
-    experiment_id = ctx.IDexperiment
-    path = ctx.path
-    output_path = ctx.output_path
-    
-    logger.log("Starting Flower Engine", details="", object="experiment_run", object_id=experiment_id )
-    logger.log(get_pod_log_info(), details="", object="experiment_run", object_id=experiment_id )
-
-    logger.log("1 - " + str(Experiment.metrics), details="", object="experiment_run", object_id=experiment_id )
-    logger.log("2 - " + str(Config(metrics)), details="", object="experiment_run", object_id=experiment_id )
-
-    def schedule_file_logging():
-        schedule.every(2).seconds.do(backend.write_experiment_results_callback('./flower.log', experiment_id)) 
-    
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
-
-    thread_schedulling = threading.Thread(target=schedule_file_logging)
-    thread_schedulling.daemon = True
-    thread_schedulling.start()
-
-    #fraction_fit = kwargs.get('fraction_fit', 1.)
-    #fraction_evaluate  = kwargs.get('fraction_evaluate', 1.)
-
-    try:
-
-        update_experiment_status(backend, experiment_id, "running")  
-        
-        client_app = ClientApp(client_fn=client_fn)
-        server_app = ServerApp(server_fn=server_fn)
-        
-        flwr.simulation.run_simulation(server_app=server_app, client_app=client_app, 
-                                     num_supernodes=num_clients,
-                                     backend_config={"client_resources": {"num_cpus": 1, "num_gpus": 0.5}})
-
-        update_experiment_status(backend, experiment_id, "finished") 
-
-        copy_model_wights(path, output_path, experiment_id, logger) 
-
-        logger.log("Stopping Flower Engine", details="", object="experiment_run", object_id=experiment_id )
-    except Exception as ex:
-        update_experiment_status(backend, experiment_id, "error")  
-        logger.log("Error while running Flower", details=str(ex), object="experiment_run", object_id=experiment_id )
-        logger.log("Stacktrace of Error while running Flower", details=traceback.format_exc(), object="experiment_run", object_id=experiment_id )
-    
-    backend.write_experiment_results('./flower.log', experiment_id)
 
