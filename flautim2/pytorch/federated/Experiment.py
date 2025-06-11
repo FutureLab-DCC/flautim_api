@@ -8,7 +8,7 @@ import flautim2 as fl_log
 from flautim2.pytorch import Model
 from flautim2.pytorch.common import ExperimentContext, ExperimentStatus
 
-from flautim2.pytorch.common import metrics
+#from flautim2.pytorch.common import metrics
 
 class Experiment(fl.client.NumPyClient):
     def __init__(self, model : Model, dataset : Dataset, context, **kwargs) -> None:
