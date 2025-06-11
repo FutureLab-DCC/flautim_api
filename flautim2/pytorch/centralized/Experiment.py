@@ -59,14 +59,17 @@ class Experiment(object):
     
     def evaluate(self, **kwargs):
 
-        fl.log("Model evaluate started")
-        
+        start_time = time.time()
         values_metrics_validation = self.validation_loop(self.dataset.dataloader(validation = True))
+        elapsed_time = time.time() - start_time
+
+        fl.log(f'[TRAIN] Epoch [{self.epochs}] Test Loss: {values_metrics_train['LOSS']:.4f}, ' +
+                f'Time: {elapsed_time:.2f} seconds')
 
         for name in values_metrics_validation:
                 fl.measures(self, name, values_metrics_validation[name], validation=True)
 
-        fl.log("Model evaluate finished")
+        #fl.log("Model evaluate finished")
 
 
     def training_loop(self, data_loader):
