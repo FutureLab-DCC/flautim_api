@@ -62,7 +62,7 @@ class Experiment(object):
 
         start_time = time.time()
         loss, values_metrics_validation = self.validation_loop(self.dataset.dataloader(validation = True))
-        values_metrics_validation['LOSS'] = values_metrics_validation
+        values_metrics_validation['LOSS'] = loss
         elapsed_time = time.time() - start_time
 
         fl.log(f'[TRAIN] Epoch [{self.epochs}] Test Loss: {values_metrics_validation['LOSS']:.4f}, ' +
