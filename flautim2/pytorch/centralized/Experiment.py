@@ -41,7 +41,8 @@ class Experiment(object):
 
         for epochs in range(1, self.epochs+1):
             start_time = time.time()
-            values_metrics_train = self.training_loop(self.dataset.dataloader())
+            loss, values_metrics_train = self.training_loop(self.dataset.dataloader())
+            values_metrics_train['LOSS'] = loss
             elapsed_time = time.time() - start_time
             self.epochs = epochs
             
@@ -60,7 +61,8 @@ class Experiment(object):
     def evaluate(self, **kwargs):
 
         start_time = time.time()
-        values_metrics_validation = self.validation_loop(self.dataset.dataloader(validation = True))
+        loss, values_metrics_validation = self.validation_loop(self.dataset.dataloader(validation = True))
+        values_metrics_validation['LOSS'] = values_metrics_validation
         elapsed_time = time.time() - start_time
 
         fl.log(f'[TRAIN] Epoch [{self.epochs}] Test Loss: {values_metrics_validation['LOSS']:.4f}, ' +
