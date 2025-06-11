@@ -3,7 +3,7 @@ from enum import Enum
 import threading, schedule, logging
 import flautim2 as fl
 from flautim2.pytorch import Model
-from flautim2.pytorch.common import ExperimentContext, ExperimentStatus, update_experiment_status, copy_model_wights, Config, metrics
+from flautim2.pytorch.common import ExperimentContext, ExperimentStatus, update_experiment_status, copy_model_wights, Config
 import time
 
 class Experiment(object):
