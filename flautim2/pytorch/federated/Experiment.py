@@ -50,16 +50,15 @@ class Experiment(fl.client.NumPyClient):
         self.model.set_parameters(parameters)
 
         self.epoch_fl = config["server_round"]
-
-        values_metrics_train = self.training_loop(self.dataset.dataloader())
-
+        
+        for epochs in range(1, self.epochs+1):
+            values_metrics_train = self.training_loop(self.dataset.dataloader())
+            for name in values_metrics_train:
+                    self.measures.log(self, name, values_metrics_train[name], validation=False, epoch = self.epoch_fl)
+                    return_dic[name] = float(values_metrics_train[name])
+                
         self.log(f"Model training finished", details="", object="", object_id=self.id)
-
-        for name in values_metrics_train:
-                #self.log(f"Mesure: "+ 'metrics.' + str(name), details="", object="", object_id=self.id)
-                self.measures.log(self, name, values_metrics_train[name], validation=False, epoch = self.epoch_fl)
-                return_dic[name] = float(values_metrics_train[name])
-
+        
         self.model.save()
 
         return self.model.get_parameters(), len(self.dataset.dataloader()), return_dic
