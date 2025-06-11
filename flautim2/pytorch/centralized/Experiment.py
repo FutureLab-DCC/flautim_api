@@ -51,6 +51,8 @@ class Experiment(object):
             for name in values_metrics_train:
                 fl.measures(self, name, values_metrics_train[name], validation=False)
 
+            self.evaluate()
+
         fl.log("Model training finished")
 
         
@@ -116,7 +118,7 @@ class Experiment(object):
 
             self.fit()
 
-            self.evaluate()
+            #self.evaluate()
         
             update_experiment_status(self.context.backend, self.id, "finished")
 
