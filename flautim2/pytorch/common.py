@@ -401,8 +401,6 @@ def run_federated(client_fn, server_fn, name_log = 'flower.log', post_processing
         
         client_app = ClientApp(client_fn=client_fn)
         server_app = ServerApp(server_fn=server_fn)
-        server_app._strategy.on_fit_config_fn = fit_config
-        server_app._strategy.on_evaluate_config_fn = fit_config
         
         flwr.simulation.run_simulation(server_app=server_app, client_app=client_app, 
                                      num_supernodes=num_clients,
