@@ -75,7 +75,7 @@ class Experiment(fl.client.NumPyClient):
         self.epoch_fl = config["server_round"]
         
         loss, values_metrics_validation = self.validation_loop(self.dataset.dataloader(validation = True))
-        values_metrics_validation['LOSS' = loss
+        values_metrics_validation['LOSS'] = loss
 
         self.log("Model training finished", details="", object="experiment_evaluate" )
 
