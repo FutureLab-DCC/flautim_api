@@ -2,7 +2,7 @@ import pymongo
 from datetime import datetime
 import argparse
 from enum import Enum
-import flwr as fl
+import flwr
 import os, threading, schedule, logging
 from typing import List, Tuple, Dict
 import numpy as np
@@ -11,6 +11,58 @@ import shutil
 import time, traceback, subprocess, sys
 
 from flwr.server.strategy.aggregate import weighted_loss_avg
+
+from flwr.server import ServerApp
+
+from flwr.client import ClientApp
+
+import platform
+import psutil
+import subprocess
+
+def get_pod_log_info() -> str:
+    info = []
+
+    # OS and Python info
+    info.append(f"OS: {platform.system()} {platform.release()}")
+    info.append(f"Python Version: {platform.python_version()}")
+    info.append(f"Machine: {platform.machine()}")
+    info.append(f"Hostname: {platform.node()}")
+
+    # CPU info
+    cpu_count = psutil.cpu_count(logical=True)
+    cpu_freq = psutil.cpu_freq()
+    info.append(f"CPU Cores: {cpu_count}")
+    if cpu_freq:
+        info.append(f"CPU Frequency: {cpu_freq.current:.2f} MHz")
+
+    # Memory info
+    mem = psutil.virtual_memory()
+    info.append(f"Memory: {mem.total / (1024**3):.2f} GB")
+
+    # GPU info using nvidia-smi (if available)
+    try:
+        result = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name,memory.total,driver_version", "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, check=True
+        )
+        gpus = result.stdout.strip().split("\n")
+        for idx, gpu in enumerate(gpus):
+            name, mem_total, driver = map(str.strip, gpu.split(','))
+            info.append(f"GPU {idx}: {name}, Memory: {mem_total} MB, Driver: {driver}")
+    except Exception:
+        info.append("GPU Info: Not available or nvidia-smi not installed")
+
+    # Format the info in a box
+    lines = [f"│ {line}" for line in info]
+    width = max(len(line) for line in lines)
+    header = " MACHINE SETTINGS "
+    box_top = "\n"+f"┌{'─' * (width)}┐"
+    title_line = f"│{header.center(width)}│"
+    box_bottom = f"└{'─' * (width)}┘"
+
+    return "\n".join([box_top, title_line] + lines + [box_bottom])
+
 
 class Backend(object):
     def __init__(self, **kwargs):
@@ -62,7 +114,28 @@ class Backend(object):
                 
         return fn_callback
         
-
+def get_argparser():
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument("--user", type=str, required=True)
+    parser.add_argument("--path", type=str, required=True)
+    parser.add_argument("--output-path", type=str, required=True)
+    parser.add_argument("--dbserver", type=str, required=False, default="127.0.0.1")
+    parser.add_argument("--dbport", type=str, required=False, default="27017")
+    parser.add_argument("--dbuser", type=str, required=True)
+    parser.add_argument("--dbpw", type=str, required=True)
+    parser.add_argument("--clients", type=int, required=False, default=3)
+    parser.add_argument("--rounds", type=int, required=False, default=10)
+    parser.add_argument("--epochs", type=int, required=False, default=10)
+    parser.add_argument("--IDexperiment", type=str, required=True, default=0)
+    ctx = parser.parse_args()
+    
+    backend = Backend(server = ctx.dbserver, port = ctx.dbport, user = ctx.dbuser, password=ctx.dbpw)
+    
+    logger = Logger(backend, ctx)
+    measures = Measures(backend, ctx)
+    
+    return parser, ctx, backend, logger, measures
 
 class Logger(object):
     def __init__(self, backend, context):
@@ -70,37 +143,34 @@ class Logger(object):
         
         self.backend = backend
         
-        self.context = context
+        self.user = context.user
         
-    def log(self, msg : str, **append):
+    def log(self, msg, details="", object="", object_id=None, **append):
         ts = str(datetime.now())
-        data = { "user": self.context.user, "timestamp": ts, "message" : msg }
-        if append is not None:
-                data.update(append)
-        self.backend.write_db(data, collection = 'logs')
+        data = { "user": self.user, "timestamp": ts, "message": msg, 
+                "details": details, "object": object, "object_id": object_id }
+        if append:
+            data.update(append)
+        self.backend.write_db(data, collection='logs')
 
-
-class metrics(Enum):
-     MSE = 1
-     RMSE = 2
-     NRMSE = 3
-     MAE = 4
-     MAPE = 5
-     SMAPE = 6
-     MDE = 7
-     R2 = 8
-     ACCURACY = 9
-     PRECISION = 10
-     RECALL = 11
-     F1SCORE = 12
-     AUC = 13
-     CROSSENTROPY = 14
-     TIME = 15,
-     OTHER1 = 16,
-     OTHER2 = 17,
-     OTHER3 = 18
+class Measures(object):
+    def __init__(self, backend, IDexperiment):
+        super().__init__()
+        
+        self.IDexperiment = IDexperiment
+    
+        self.backend = backend
+        
+    def log(self, experiment, metric, values, validation = False, epoch = None, **append):
+        ts = str(datetime.now())
+        data = { "Experiment": self.IDexperiment, "user": str(experiment.model.suffix), "timestamp": ts,
+                 "metric" : 'metrics.' + str(metric), "model" : experiment.model.uid, "dataset": experiment.dataset.name, 
+                "values": values, "validation": validation,
+                "epoch" : experiment.epochs if epoch is None else epoch }
+        data.update(append)
+        
+        self.backend.write_db(data, collection = 'measures')
      
-
 class ExperimentStatus(str, Enum):
     PENDING = "pending"
     RUNNING = "running"
@@ -108,18 +178,18 @@ class ExperimentStatus(str, Enum):
     ABORTED = "aborted"
     ERROR = "error"
 
-def get_experiment_variables(context, experiment_id):
-    backend = Backend(
-        server=context.dbserver,
-        port=context.dbport,
-        user=context.dbuser,
-        password=context.dbpw
-    )
+def get_experiment_variables(context):
+    # backend = Backend(
+    #     server = context.db.dbserver,
+    #     port = context.db.dbport,
+    #     user = context.db.dbuser,
+    #     password = context.db.dbpw
+    # )
     # Use context manager to avoid leaks
-    with pymongo.MongoClient(backend.connection_string) as client:
+    with pymongo.MongoClient(context.backend.connection_string) as client:
         db = client["flautim"]
         experiments = db["experimento"]
-        experiment = experiments.find_one({"_id": experiment_id})
+        experiment = experiments.find_one({"_id": context.experiment.id})
        
         return {"projectId": experiment["projectId"],
                 "modelId": experiment["modelId"],
@@ -130,12 +200,8 @@ def get_experiment_variables(context, experiment_id):
 class ExperimentContext(object):
     def __init__(self, context, no_db=False):
         super().__init__()
-        
-        self.context = context
 
-        self.id = self.context.IDexperiment
-
-        variables = get_experiment_variables(self.context, self.id)
+        variables = get_experiment_variables(context)
 
         # Assign fetched variables to class attributes
         self.project = variables["projectId"]
@@ -149,23 +215,7 @@ class ExperimentContext(object):
         self.experiments.update_one(filter, newvalues)
 
 
-class Measures(object):
-    def __init__(self, backend, context):
-        super().__init__()
-        
-        self.context = context
-    
-        self.backend = backend
-        
-    def log(self, experiment, metric, values, validation = False, epoch = None, **append):
-        ts = str(datetime.now())
-        data = { "Experiment": self.context.IDexperiment, "user": experiment.model.suffix, "timestamp": ts,
-                 "metric" : str(metric), "model" : experiment.model.uid, "dataset": experiment.dataset.name, 
-                "values": values, "validation": validation,
-                "epoch" : experiment.epoch_fl if epoch is None else epoch }
-        data.update(append)
-        
-        self.backend.write_db(data, collection = 'measures')
+
 
 def fit_config(server_round: int):
     """Return training configuration dict for each round.
@@ -178,62 +228,8 @@ def fit_config(server_round: int):
     }
     return config
 
-    
-def run_centralized(experiment, name_log = 'centralized.log', post_processing_fn = [], **kwargs):
 
-    logging.basicConfig(filename=name_log,
-                    filemode='w',  # 'a' para append, 'w' para sobrescrever
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-    
-    root = logging.getLogger()
-    root.setLevel(logging.INFO)
-    
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-
-    root.addHandler(console_handler)
-
-    _, ctx, backend, logger, _ = get_argparser()
-    experiment_id = ctx.IDexperiment
-    path = ctx.path
-    output_path = ctx.output_path
-    epochs = ctx.epochs
-
-    logger.log("Starting Centralized Training", details="", object="experiment_run", object_id=experiment_id )
-
-    def schedule_file_logging():
-        schedule.every(2).seconds.do(backend.write_experiment_results_callback('./centralized.log', experiment_id)) 
-    
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
-
-    thread_schedulling = threading.Thread(target=schedule_file_logging)
-    thread_schedulling.daemon = True
-    thread_schedulling.start()
-
-    try:
-        update_experiment_status(backend, experiment_id, "running")  
-
-        experiment.fit()
-    
-        update_experiment_status(backend, experiment_id, "finished") 
-
-        copy_model_wights(path, output_path, experiment_id, logger) 
-
-        logger.log("Finishing Centralized Training", details="", object="experiment_run", object_id=experiment_id )
-    except Exception as ex:
-        update_experiment_status(backend, experiment_id, "error")  
-        logger.log("Error during Centralized Training", details=str(ex), object="experiment_run", object_id=experiment_id )
-        logger.log("Stacktrace of Error during Centralized Training", details=traceback.format_exc(), object="experiment_run", object_id=experiment_id )
-        
-    
-    backend.write_experiment_results('./centralized.log', experiment_id)
-
-
-class CustomFedAvg(fl.server.strategy.FedAvg):
+class CustomFedAvg(flwr.server.strategy.FedAvg):
 
     def aggregate_evaluate(
         self,
@@ -266,8 +262,43 @@ class CustomFedAvg(fl.server.strategy.FedAvg):
             
         return loss_aggregated, metrics_aggregated
 
-    
-def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_fn = [], **kwargs):
+
+def weighted_average(metrics) :
+    """Compute weighted average.
+
+    It is a generic implementation that averages only over floats and ints and drops the
+    other data types of the Metrics.
+    """
+    # num_samples_list can represent the number of samples
+    # or the number of batches depending on the client
+    num_samples_list = [n_batches for n_batches, _ in metrics]
+    num_samples_sum = sum(num_samples_list)
+    metrics_lists: Dict[str, List[float]] = {}
+    for num_samples, all_metrics_dict in metrics:
+        #  Calculate each metric one by one
+        for single_metric, value in all_metrics_dict.items():
+            if isinstance(value, (float, int)):
+                metrics_lists[single_metric] = []
+        # Just one iteration needed to initialize the keywords
+        break
+
+    for num_samples, all_metrics_dict in metrics:
+        # Calculate each metric one by one
+        for single_metric, value in all_metrics_dict.items():
+            # Add weighted metric
+            if isinstance(value, (float, int)):
+                metrics_lists[single_metric].append(float(num_samples * value))
+
+    weighted_metrics: Dict[str, Scalar] = {}
+    for metric_name, metric_values in metrics_lists.items():
+        weighted_metrics[metric_name] = sum(metric_values) / num_samples_sum
+
+    return weighted_metrics
+
+
+def run_federated(client_fn, server_fn, name_log = 'flower.log', post_processing_fn = [], **kwargs):
+
+    #self.metrics = Config(metrics)
 
     logging.basicConfig(filename=name_log,
                     filemode='w',  # 'a' para append, 'w' para sobrescrever
@@ -288,10 +319,11 @@ def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_f
     experiment_id = ctx.IDexperiment
     path = ctx.path
     output_path = ctx.output_path
-    num_clients = kwargs.get("num_clients", ctx.clients)
-    num_rounds = kwargs.get("num_rounds", ctx.rounds)
+    num_clients = kwargs.get("num_clients", 10)
+    num_rounds = 15 #kwargs.get("num_rounds", ctx.rounds)
     
     logger.log("Starting Flower Engine", details="", object="experiment_run", object_id=experiment_id )
+    logger.log(get_pod_log_info(), details="", object="experiment_run", object_id=experiment_id )
 
     def schedule_file_logging():
         schedule.every(2).seconds.do(backend.write_experiment_results_callback('./flower.log', experiment_id)) 
@@ -304,31 +336,19 @@ def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_f
     thread_schedulling.daemon = True
     thread_schedulling.start()
 
-    fraction_fit = kwargs.get('fraction_fit', 1.)
-    fraction_evaluate  = kwargs.get('fraction_evaluate', 1.)
+    #fraction_fit = kwargs.get('fraction_fit', 1.)
+    #fraction_evaluate  = kwargs.get('fraction_evaluate', 1.)
 
     try:
 
-        strategy = CustomFedAvg(
-            fraction_fit=fraction_fit,  
-            fraction_evaluate=fraction_evaluate,  
-            min_available_clients=num_clients,  
-            evaluate_fn=eval_fn,
-            on_fit_config_fn=fit_config,
-            evaluate_metrics_aggregation_fn=client_fn("FL-Global").weighted_average
-        )
-
         update_experiment_status(backend, experiment_id, "running")  
-    
-        client_resources = {"num_cpus": 1, "num_gpus": 0.75} 
- 
-        h = fl.simulation.start_simulation(
-            client_resources=client_resources,
-            client_fn=client_fn, 
-            num_clients=num_clients, 
-            config=fl.server.ServerConfig(num_rounds=num_rounds),  
-            strategy=strategy,  
-        )
+        
+        client_app = ClientApp(client_fn=client_fn)
+        server_app = ServerApp(server_fn=server_fn)
+        
+        flwr.simulation.run_simulation(server_app=server_app, client_app=client_app, 
+                                     num_supernodes=num_clients,
+                                     backend_config={"client_resources": {"num_cpus": 1, "num_gpus": 0.5}})
 
         update_experiment_status(backend, experiment_id, "finished") 
 
@@ -341,29 +361,6 @@ def run_federated(client_fn, eval_fn, name_log = 'flower.log', post_processing_f
         logger.log("Stacktrace of Error while running Flower", details=traceback.format_exc(), object="experiment_run", object_id=experiment_id )
     
     backend.write_experiment_results('./flower.log', experiment_id)
-
-def get_argparser():
-    parser = argparse.ArgumentParser()
-    
-    parser.add_argument("--user", type=str, required=True)
-    parser.add_argument("--path", type=str, required=True)
-    parser.add_argument("--output-path", type=str, required=True)
-    parser.add_argument("--dbserver", type=str, required=False, default="127.0.0.1")
-    parser.add_argument("--dbport", type=str, required=False, default="27017")
-    parser.add_argument("--dbuser", type=str, required=True)
-    parser.add_argument("--dbpw", type=str, required=True)
-    parser.add_argument("--clients", type=int, required=False, default=3)
-    parser.add_argument("--rounds", type=int, required=False, default=10)
-    parser.add_argument("--epochs", type=int, required=False, default=10)
-    parser.add_argument("--IDexperiment", type=str, required=True, default=0)
-    ctx = parser.parse_args()
-    
-    backend = Backend(server = ctx.dbserver, port = ctx.dbport, user = ctx.dbuser, password=ctx.dbpw)
-    
-    logger = Logger(backend, ctx)
-    measures = Measures(backend, ctx)
-    
-    return parser, ctx, backend, logger, measures
 
 
 def update_experiment_status(backend, id, status):
@@ -388,6 +385,23 @@ def copy_model_wights(path, output_path, id, logger):
     except Exception as e:
         logger.log("Erro while copying model wights", details=str(e), object="filesystem_file", object_id=id )
 
-    
+
+class Config(dict):
+    def __init__(self, d):
+        for key, value in d.items():
+            if isinstance(value, dict):
+                value = Config(value)
+            self[key] = value
+
+    def __getattr__(self, name):
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError(f"Config object has no attribute '{name}'")
+
+    def __setattr__(self, name, value):
+        self[name] = value
+
+
 
 
