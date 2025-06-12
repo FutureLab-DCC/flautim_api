@@ -2,7 +2,7 @@
 import uuid
 from datetime import datetime
 import os
-import flautim2 as fl
+import flautim as fl
 
 from collections import OrderedDict
 
