@@ -51,9 +51,9 @@ class Experiment(fl.client.NumPyClient):
 
         self.epoch_fl = config["server_round"]
         
-        #for epochs in range(1, self.epochs+1):
-        loss, values_metrics_train = self.training_loop(self.dataset.dataloader())
-        values_metrics_train['LOSS'] = loss
+        for epochs in range(1, self.epochs+1):
+            loss, values_metrics_train = self.training_loop(self.dataset.dataloader())
+            values_metrics_train['LOSS'] = loss
         for name in values_metrics_train:
                 self.measures.log(self, name, values_metrics_train[name], validation=False, epoch = self.epoch_fl)
                 return_dic[name] = float(values_metrics_train[name])
