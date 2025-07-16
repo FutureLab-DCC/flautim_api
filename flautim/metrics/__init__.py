@@ -29,7 +29,7 @@ class Metrics:
         Returns:
         - float: Root Mean Squared Error.
         """
-        mse = mean_squared_error(y, y_hat)
+        mse = Metrics.mean_squared_error(y, y_hat)
         return np.sqrt(mse)
 
     def normalized_root_mean_squared_error(y, y_hat):
@@ -43,7 +43,7 @@ class Metrics:
         Returns:
         - float: Normalized RMSE (RMSE divided by the range of true values).
         """
-        rmse = root_mean_squared_error(y, y_hat)
+        rmse = Metrics.root_mean_squared_error(y, y_hat)
         return rmse / (np.max(y) - np.min(y))
 
     def accuracy(y, y_hat):
@@ -60,8 +60,39 @@ class Metrics:
         y = np.asarray(y)
         y_hat = np.asarray(y_hat)
         return np.mean(y == y_hat)
+    
+    def absolute_percentage_error(y, y_hat):
+        """
+        Computes Absolute Percentage Error (APE) for each prediction.
 
+        Returns:
+        - np.ndarray: APE values for each prediction.
+        """
+        y = np.asarray(y)
+        y_hat = np.asarray(y_hat)
+        return np.abs((y - y_hat) / y) * 100
 
+    def mean_absolute_percentage_error(y, y_hat):
+        """
+        Computes Mean Absolute Percentage Error (MAPE).
 
+        Returns:
+        - float: MAPE value.
+        """
+        ape = Metrics.absolute_percentage_error(y, y_hat)
+        return np.mean(ape)
 
+    def symmetric_mean_absolute_percentage_error(y, y_hat):
+        """
+        Computes Symmetric Mean Absolute Percentage Error (SMAPE).
+
+        Returns:
+        - float: SMAPE value.
+        """
+        y = np.asarray(y)
+        y_hat = np.asarray(y_hat)
+        denominator = (np.abs(y) + np.abs(y_hat)) / 2
+        smape = np.abs(y - y_hat) / denominator
+        return np.mean(smape) * 100
+    
 
