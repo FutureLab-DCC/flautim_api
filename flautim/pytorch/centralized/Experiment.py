@@ -92,14 +92,14 @@ class Experiment(object):
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                         level=logging.INFO)
         
-        root = logging.getLogger()
-        root.setLevel(logging.INFO)
+        #root = logging.getLogger()
+        #root.setLevel(logging.INFO)
         
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.INFO)
         console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 
-        root.addHandler(console_handler)
+        #root.addHandler(console_handler)
 
         fl.log(common.get_pod_log_info())
 
