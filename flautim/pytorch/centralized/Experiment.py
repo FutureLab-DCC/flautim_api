@@ -87,17 +87,17 @@ class Experiment(object):
         # metrics['LOSS'] = None
         self.metrics = Config(metrics)
 
-        logging.basicConfig(filename=name_log,
-                        filemode='w',  # 'a' para append, 'w' para sobrescrever
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        level=logging.INFO)
+        #logging.basicConfig(filename=name_log,
+        #                filemode='w',  # 'a' para append, 'w' para sobrescrever
+        #                format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        #                level=logging.INFO)
         
         #root = logging.getLogger()
         #root.setLevel(logging.INFO)
         
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.INFO)
-        console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        #console_handler = logging.StreamHandler()
+        #console_handler.setLevel(logging.INFO)
+        #console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 
         #root.addHandler(console_handler)
 
@@ -112,9 +112,9 @@ class Experiment(object):
                 schedule.run_pending()
                 time.sleep(1)
 
-        thread_schedulling = threading.Thread(target=schedule_file_logging)
-        thread_schedulling.daemon = True
-        thread_schedulling.start()
+        #thread_schedulling = threading.Thread(target=schedule_file_logging)
+        #thread_schedulling.daemon = True
+        #thread_schedulling.start()
 
 
         try:
