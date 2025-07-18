@@ -136,7 +136,7 @@ class Experiment(object):
             fl.log(f"Stacktrace of Error during Centralized Training: {traceback.format_exc()}")
             
         
-        self.context.backend.write_experiment_results('./centralized.log', self.id)
+        #self.context.backend.write_experiment_results('./centralized.log', self.id)
 
 
 
