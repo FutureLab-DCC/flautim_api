@@ -48,7 +48,7 @@ class Dataset(Dataset):
         collation = lambda x : collate_fn(x, self.xdtype, self.ydtype)
         tmp = self.validation() if validation else self.train()
         #return DataLoader(tmp, batch_size = self.batch_size, pin_memory=False, shuffle=self.shuffle, num_workers = self.num_workers, collate_fn=collate_fn)
-        return DataLoader(tmp, batch_size = self.batch_size, num_workers = 1, collate_fn=collation)
+        return DataLoader(tmp, batch_size = self.batch_size, num_workers = 1,  shuffle=self.shuffle, collate_fn=collation)
     
     def __getitem__(self, index):
         raise NotImplementedError("The validation method should be implemented!")
