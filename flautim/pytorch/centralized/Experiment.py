@@ -105,12 +105,12 @@ class Experiment(object):
 
         fl.log(f"Starting Centralized Training")
 
-        def schedule_file_logging():
-            schedule.every(2).seconds.do(self.context.backend.write_experiment_results_callback('./centralized.log', self.id)) 
+        #def schedule_file_logging():
+        #    schedule.every(2).seconds.do(self.context.backend.write_experiment_results_callback('./centralized.log', self.id)) 
         
-            while True:
-                schedule.run_pending()
-                time.sleep(1)
+        #    while True:
+        #        schedule.run_pending()
+        #        time.sleep(1)
 
         #thread_schedulling = threading.Thread(target=schedule_file_logging)
         #thread_schedulling.daemon = True
