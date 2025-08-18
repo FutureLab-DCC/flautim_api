@@ -5,6 +5,7 @@ import flautim as fl
 from flautim.pytorch import Model
 from flautim.pytorch.common import ExperimentContext, ExperimentStatus, update_experiment_status, copy_model_wights, Config
 import time
+import traceback
 
 class Experiment(object):
     def __init__(self, model : Model, dataset : Dataset, context, **kwargs) -> None:
