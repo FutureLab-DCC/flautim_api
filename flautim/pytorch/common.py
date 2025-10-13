@@ -345,10 +345,12 @@ def run_federated(client_fn, server_fn, name_log = 'flower.log', post_processing
         
         client_app = ClientApp(client_fn=client_fn)
         server_app = ServerApp(server_fn=server_fn)
+
+        client_resources = kwargs.get('client_resources', {"num_cpus": 1, "num_gpus": 0.5})
         
         flwr.simulation.run_simulation(server_app=server_app, client_app=client_app, 
                                      num_supernodes=num_clients,
-                                     backend_config={"client_resources": {"num_cpus": 1, "num_gpus": 0.5}})
+                                     backend_config={"client_resources": client_resources})
 
         update_experiment_status(backend, experiment_id, "finished") 
 
