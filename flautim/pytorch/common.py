@@ -8,7 +8,7 @@ from typing import List, Tuple, Dict
 import numpy as np
 from pathlib import Path
 import shutil
-import time, traceback, subprocess, sys
+import time, traceback, sys
 
 from flwr.server.strategy.aggregate import weighted_loss_avg
 
@@ -18,7 +18,6 @@ from flwr.client import ClientApp
 
 import platform
 import psutil
-import subprocess
 
 def get_pod_log_info() -> str:
     info = []
@@ -40,24 +39,43 @@ def get_pod_log_info() -> str:
     mem = psutil.virtual_memory()
     info.append(f"Memory: {mem.total / (1024**3):.2f} GB")
 
-    # GPU info using nvidia-smi (if available)
+    # GPU info using PyTorch (offline-friendly)
     try:
-        result = subprocess.run(
-            ["nvidia-smi", "--query-gpu=name,memory.total,driver_version", "--format=csv,noheader,nounits"],
-            capture_output=True, text=True, check=True
-        )
-        gpus = result.stdout.strip().split("\n")
-        for idx, gpu in enumerate(gpus):
-            name, mem_total, driver = map(str.strip, gpu.split(','))
-            info.append(f"GPU {idx}: {name}, Memory: {mem_total} MB, Driver: {driver}")
-    except Exception:
-        info.append("GPU Info: Not available or nvidia-smi not installed")
+        import torch
+
+        info.append(f"PyTorch Version: {torch.__version__}")
+        # Isto NÃO é driver, mas ajuda a diagnosticar build/compatibilidade:
+        info.append(f"CUDA Build Version (torch.version.cuda): {torch.version.cuda}")
+
+        if torch.cuda.is_available():
+            n = torch.cuda.device_count()
+            info.append(f"CUDA Available: Yes ({n} device(s))")
+
+            for idx in range(n):
+                name = torch.cuda.get_device_name(idx)
+                props = torch.cuda.get_device_properties(idx)
+                total_mem_gb = props.total_memory / (1024**3)
+
+                # Alguns campos úteis do get_device_properties:
+                # props.major / props.minor (compute capability)
+                # props.multi_processor_count
+                info.append(
+                    f"GPU {idx}: {name}, "
+                    f"VRAM: {total_mem_gb:.2f} GB, "
+                    f"Compute: {props.major}.{props.minor}, "
+                    f"SMs: {props.multi_processor_count}"
+                )
+        else:
+            info.append("CUDA Available: No")
+    except Exception as e:
+        # Se torch não estiver instalado, ou ambiente sem CUDA, etc.
+        info.append(f"GPU Info: Not available via PyTorch ({type(e).__name__})")
 
     # Format the info in a box
     lines = [f"│ {line}" for line in info]
     width = max(len(line) for line in lines)
     header = " MACHINE SETTINGS "
-    box_top = "\n"+f"┌{'─' * (width)}┐"
+    box_top = "\n" + f"┌{'─' * (width)}┐"
     title_line = f"│{header.center(width)}│"
     box_bottom = f"└{'─' * (width)}┘"
 
