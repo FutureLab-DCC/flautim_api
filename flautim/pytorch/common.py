@@ -306,7 +306,7 @@ class Output(object):
         O array é salvo em:
             /outputs/arrays/<ref>
         """
-        from flautim2.pytorch.h5_store import save_output, save_event
+        from flautim.pytorch.h5_store import save_output, save_event
 
         ref = save_output(
             base_dir=self.context.filesystem.h5_dir,
@@ -340,7 +340,7 @@ class Output(object):
 
         O texto é salvo como blob (bytes UTF-8).
         """
-        from flautim2.pytorch.h5_store import save_output, save_event
+        from flautim.pytorch.h5_store import save_output, save_event
 
         ref = save_output(
             base_dir=self.context.filesystem.h5_dir,
