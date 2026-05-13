@@ -267,7 +267,7 @@ class Output(object):
         Retorno:
         - ref (string): identificador único do arquivo salvo no HDF5
         """
-        from flautim2.pytorch.h5_store import save_output, save_event
+        from flautim.pytorch.h5_store import save_output, save_event
 
         # Salva fisicamente a imagem em /outputs/blobs/<ref>
         ref = save_output(
