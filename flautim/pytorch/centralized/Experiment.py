@@ -126,6 +126,8 @@ class Experiment(object):
             #self.evaluate()
         
             update_experiment_status(self.context.backend, self.id, "finished")
+            
+            self.model.save()
 
             copy_model_wights(self.context.filesystem.path, self.context.filesystem.output_path, self.id, self.context.logger) 
 
